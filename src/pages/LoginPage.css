@@ -1,0 +1,162 @@
+.login-page {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  min-height: 100svh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 48px 24px 32px;
+  background:
+    radial-gradient(ellipse at 50% 43%, rgba(31, 65, 53, 0.18), transparent 38%),
+    #0b100f;
+}
+
+.ambient {
+  position: absolute;
+  z-index: -1;
+  width: 360px;
+  height: 360px;
+  border: 1px solid rgba(148, 181, 155, 0.07);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.ambient::before,
+.ambient::after {
+  position: absolute;
+  border: 1px solid rgba(148, 181, 155, 0.05);
+  border-radius: 50%;
+  content: '';
+}
+
+.ambient::before {
+  inset: 34px;
+}
+
+.ambient::after {
+  inset: 72px;
+}
+
+.ambient-one {
+  top: -225px;
+  right: -120px;
+}
+
+.ambient-two {
+  bottom: -240px;
+  left: -180px;
+  transform: scale(1.25);
+}
+
+.login-card {
+  width: min(100%, 430px);
+  padding: 42px;
+  border: 1px solid #252e2a;
+  border-radius: 18px;
+  background: rgba(17, 23, 21, 0.94);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.32);
+}
+
+.card-heading {
+  margin-bottom: 32px;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  color: #8dca9e;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.25px;
+}
+
+.eyebrow-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #8dca9e;
+  box-shadow: 0 0 10px rgba(141, 202, 158, 0.7);
+}
+
+.card-heading h1 {
+  margin: 0 0 9px;
+  color: #eef3ef;
+  font-size: 27px;
+  font-weight: 600;
+  letter-spacing: -0.85px;
+  line-height: 1.25;
+}
+
+.card-heading p {
+  color: #929e97;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #252e2a;
+  color: #7f8b83;
+  font-size: 11px;
+}
+
+.secure-icon {
+  display: inline-flex;
+}
+
+.secure-icon svg {
+  width: 13px;
+  height: 13px;
+  stroke: #8dca9e;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.6;
+}
+
+.page-footer {
+  position: absolute;
+  bottom: 24px;
+  color: #66726a;
+  font-size: 11px;
+  text-align: center;
+}
+
+@media (max-width: 520px) {
+  .login-page {
+    justify-content: center;
+    padding: 92px 20px 72px;
+  }
+
+  .login-card {
+    padding: 32px 24px;
+  }
+
+  .card-heading h1 {
+    font-size: 25px;
+  }
+
+  .page-footer {
+    right: 20px;
+    bottom: 20px;
+    left: 20px;
+    line-height: 1.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

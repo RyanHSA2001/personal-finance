@@ -1,75 +1,47 @@
-# React + TypeScript + Vite
+# Meu Financeiro
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplicativo pessoal de controle financeiro. Por enquanto, o projeto contém a
+tela inicial de login; a autenticação ainda não está conectada a um servidor.
 
-Currently, two official plugins are available:
+## Executar o projeto
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Instale as dependências e inicie o servidor local:
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+Para verificar o TypeScript, gerar a versão de produção e executar o lint:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+npm run build
+npm run lint
 ```
+
+## Estrutura do código
+
+```text
+src/
+├── components/
+│   ├── Brand.tsx          # Marca exibida no topo da tela
+│   ├── Brand.css
+│   ├── LoginForm.tsx      # Campos, validação básica e visibilidade da senha
+│   └── LoginForm.css
+├── pages/
+│   ├── LoginPage.tsx      # Monta a tela de login
+│   └── LoginPage.css
+├── styles/
+│   └── global.css         # Estilos gerais compartilhados pelo aplicativo
+├── App.tsx                # Componente principal do React
+└── main.tsx               # Inicializa o React na página
+```
+
+Os componentes ficam em `components`, as telas em `pages` e os estilos globais
+em `styles`. Cada componente visual tem seu próprio arquivo de estilos.
+
+## Sobre o formulário
+
+Os campos são obrigatórios, o usuário tem limite de tamanho e a senha pode ser
+mostrada ou ocultada. O formulário ainda não verifica credenciais nem cria uma
+sessão: para isso, será necessário implementar um backend de autenticação.
