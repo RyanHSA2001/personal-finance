@@ -1,4 +1,4 @@
-# Meu Financeiro
+# PersonalControl
 
 Aplicativo pessoal de controle financeiro. Por enquanto, o projeto contém a
 tela inicial de login; a autenticação ainda não está conectada a um servidor.
