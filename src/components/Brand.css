@@ -5,14 +5,14 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #e8eee9;
+  color: var(--color-text);
   font-size: 15px;
   font-weight: 650;
   letter-spacing: -0.3px;
 }
 
 .brand-highlight {
-  color: #8dca9e;
+  color: var(--color-accent);
 }
 
 .brand-mark {
@@ -20,14 +20,14 @@
   width: 32px;
   height: 32px;
   place-items: center;
-  border: 1px solid rgba(137, 201, 153, 0.28);
+  border: 1px solid rgba(167, 139, 250, 0.3);
   border-radius: 10px;
-  background: rgba(99, 164, 116, 0.1);
+  background: rgba(167, 139, 250, 0.1);
 }
 
 .brand-mark svg {
   width: 18px;
-  stroke: #8dca9e;
+  stroke: var(--color-accent);
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 1.8;

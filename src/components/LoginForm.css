@@ -11,7 +11,7 @@
 }
 
 .form-field label {
-  color: #d7dfd9;
+  color: #d9d6e4;
   font-size: 13px;
   font-weight: 550;
 }
@@ -21,15 +21,15 @@
   display: flex;
   height: 48px;
   align-items: center;
-  border: 1px solid #303a35;
+  border: 1px solid var(--color-border-strong);
   border-radius: 8px;
-  background: #0e1411;
+  background: var(--color-surface-input);
   transition: border-color 150ms ease, box-shadow 150ms ease;
 }
 
 .input-wrap:focus-within {
-  border-color: #79b88a;
-  box-shadow: 0 0 0 3px rgba(121, 184, 138, 0.12);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-glow);
 }
 
 .field-icon {
@@ -37,7 +37,7 @@
   height: 17px;
   flex: 0 0 auto;
   margin-left: 14px;
-  stroke: #78867d;
+  stroke: #89849c;
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 1.6;
@@ -51,13 +51,13 @@
   border: 0;
   outline: 0;
   background: transparent;
-  color: #eef3ef;
+  color: var(--color-text);
   font: inherit;
   font-size: 13px;
 }
 
 .input-wrap input::placeholder {
-  color: #68746d;
+  color: #777287;
 }
 
 .password-toggle {
@@ -69,17 +69,17 @@
   border: 0;
   border-radius: 0 8px 8px 0;
   background: transparent;
-  color: #87948b;
+  color: #9691a8;
   cursor: pointer;
 }
 
 .password-toggle:hover {
-  color: #c5d2c8;
+  color: #d3c8ff;
 }
 
 .password-toggle:focus-visible,
 .submit-button:focus-visible {
-  outline: 2px solid #8dca9e;
+  outline: 2px solid var(--color-accent);
   outline-offset: 3px;
 }
 
@@ -99,10 +99,10 @@
   justify-content: center;
   gap: 10px;
   margin-top: 5px;
-  border: 1px solid #8dcc9c;
+  border: 1px solid var(--color-accent);
   border-radius: 8px;
-  background: #8dcc9c;
-  color: #102016;
+  background: var(--color-accent);
+  color: var(--color-accent-contrast);
   font: inherit;
   font-size: 14px;
   font-weight: 700;
@@ -112,7 +112,7 @@
 
 .submit-button:hover {
   transform: translateY(-1px);
-  background: #a0d8ad;
+  background: var(--color-accent-hover);
 }
 
 .submit-button:active {
@@ -130,7 +130,7 @@
 .form-notice {
   min-height: 18px;
   margin: -10px 0 -7px;
-  color: #e5bf7c;
+  color: #e4c98f;
   font-size: 12px;
   line-height: 1.5;
 }
