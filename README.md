@@ -73,5 +73,7 @@ o formulário chama `POST /auth/login` com e-mail e senha:
 - Credenciais inválidas: a mensagem "E-mail ou senha incorretos." é exibida.
 - API fora do ar: a mensagem "Não foi possível conectar ao servidor." é exibida.
 
-Para testar localmente, use o usuário `demo@teste.com` com a senha `Senha@123`
-(criado pela API somente em ambiente Development).
+Se a API ainda não tiver nenhum usuário (banco SQLite recém-criado), a tela mostra
+o **primeiro acesso**: basta preencher nome, e-mail e senha para criar a conta e
+entrar. Para testar sem cadastro, use o acesso coringa de desenvolvimento
+(configurado em `WildcardAccess` na API).
