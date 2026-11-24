@@ -1,7 +1,26 @@
+import type { AuthMode } from '../../hooks/useLogin'
 import './LoginHeading.css'
 
+type LoginHeadingProps = {
+  mode: AuthMode
+}
+
 // Cabeçalho do cartão: selo, título e subtítulo.
-function LoginHeading() {
+// Em modo 'setup' (primeiro acesso) mostra o texto de cadastro.
+function LoginHeading({ mode }: LoginHeadingProps) {
+  if (mode === 'setup') {
+    return (
+      <div className="card-heading">
+        <span className="eyebrow">
+          <span className="eyebrow-dot" aria-hidden="true" />
+          Primeiro acesso
+        </span>
+        <h1 id="login-title">Crie seu acesso</h1>
+        <p>Ainda não há usuários neste aplicativo. Cadastre-se para começar.</p>
+      </div>
+    )
+  }
+
   return (
     <div className="card-heading">
       <span className="eyebrow">

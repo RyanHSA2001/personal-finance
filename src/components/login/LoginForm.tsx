@@ -1,9 +1,9 @@
 import { useState, type FormEvent } from 'react'
 import { useCapsLock } from '../../hooks/useCapsLock'
-import type { LoginStatus } from '../../hooks/useLogin'
-import type { LoginCredentials, LoginResult } from '../../services/authService'
-import { hasErrors, isValidEmail, validateLogin } from '../../lib/validation'
-import { MailIcon } from '../ui/Icons'
+import type { AuthFormValues, AuthMode, LoginStatus } from '../../hooks/useLogin'
+import type { AuthResult } from '../../services/authService'
+import { hasErrors, isValidEmail, validateLogin, validateSetup } from '../../lib/validation'
+import { MailIcon, UserIcon } from '../ui/Icons'
 import TextField from '../ui/TextField'
 import PasswordField from './PasswordField'
 import StatusMessage from './StatusMessage'
@@ -11,28 +11,53 @@ import SubmitButton from './SubmitButton'
 import './LoginForm.css'
 
 type LoginFormProps = {
+  mode: AuthMode
   status: LoginStatus
   message: string
-  onSubmit: (credentials: LoginCredentials) => Promise<LoginResult | null>
+  onSubmit: (values: AuthFormValues) => Promise<AuthResult | null>
   onEdit: () => void
   onFailed: () => void
 }
 
-type Touched = { email: boolean; password: boolean }
+type Field = 'name' | 'email' | 'password' | 'confirmPassword'
+type Touched = Record<Field, boolean>
 
-// Formulário de login: campos, validação em tempo real e envio.
+const UNTOUCHED: Touched = { name: false, email: false, password: false, confirmPassword: false }
+
+// Formulário de login e de primeiro acesso: campos, validação em tempo real e envio.
 // Não conhece a requisição HTTP: recebe o envio pronto pela página.
-function LoginForm({ status, message, onSubmit, onEdit, onFailed }: LoginFormProps) {
+function LoginForm({ mode, status, message, onSubmit, onEdit, onFailed }: LoginFormProps) {
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [touched, setTouched] = useState<Touched>({ email: false, password: false })
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [touched, setTouched] = useState<Touched>(UNTOUCHED)
   const [submitted, setSubmitted] = useState(false)
   const capsLockOn = useCapsLock()
 
-  const errors = validateLogin({ email, password })
-  const emailError = submitted || touched.email ? errors.email : undefined
-  const passwordError = submitted || touched.password ? errors.password : undefined
-  const emailValid = isValidEmail(email) && !emailError
+  const isSetup = mode === 'setup'
+  const values: AuthFormValues = { name, email, password, confirmPassword }
+  const errors: Partial<Record<Field, string>> = isSetup ? validateSetup(values) : validateLogin(values)
+
+  // Mostra o erro de um campo só depois que ele foi tocado ou o formulário foi enviado.
+  const errorFor = (field: Field) => (submitted || touched[field] ? errors[field] : undefined)
+
+  const nameError = isSetup ? errorFor('name') : undefined
+  const emailError = errorFor('email')
+  const passwordError = errorFor('password')
+  const confirmError = isSetup ? errorFor('confirmPassword') : undefined
+
+  const emailValid = isValidEmail(email)
+  const nameValid = isSetup && name.trim().length > 0 && !errors.name
+
+  function markTouched(field: Field) {
+    setTouched((current) => ({ ...current, [field]: true }))
+  }
+
+  function handleNameChange(value: string) {
+    setName(value)
+    onEdit()
+  }
 
   function handleEmailChange(value: string) {
     setEmail(value)
@@ -41,6 +66,11 @@ function LoginForm({ status, message, onSubmit, onEdit, onFailed }: LoginFormPro
 
   function handlePasswordChange(value: string) {
     setPassword(value)
+    onEdit()
+  }
+
+  function handleConfirmChange(value: string) {
+    setConfirmPassword(value)
     onEdit()
   }
 
@@ -53,14 +83,15 @@ function LoginForm({ status, message, onSubmit, onEdit, onFailed }: LoginFormPro
       return
     }
 
-    const result = await onSubmit({ email: email.trim(), password })
+    const result = await onSubmit(values)
     if (!result) return
 
     if (result.ok) {
-      // Sucesso: limpa a senha e os estados de "já tentei enviar", sem mostrar erros.
+      // Sucesso: limpa as senhas e os estados de "já tentei enviar", sem mostrar erros.
       setPassword('')
+      setConfirmPassword('')
       setSubmitted(false)
-      setTouched({ email: false, password: false })
+      setTouched(UNTOUCHED)
     } else {
       onFailed()
     }
@@ -68,6 +99,22 @@ function LoginForm({ status, message, onSubmit, onEdit, onFailed }: LoginFormPro
 
   return (
     <form className="login-form" onSubmit={handleSubmit} noValidate>
+      {isSetup && (
+        <TextField
+          id="name"
+          label="Nome"
+          value={name}
+          placeholder="Como você se chama?"
+          autoComplete="name"
+          maxLength={120}
+          icon={<UserIcon className="field-icon" />}
+          error={nameError}
+          valid={nameValid}
+          onChange={handleNameChange}
+          onBlur={() => markTouched('name')}
+        />
+      )}
+
       <TextField
         id="email"
         label="E-mail"
@@ -80,18 +127,44 @@ function LoginForm({ status, message, onSubmit, onEdit, onFailed }: LoginFormPro
         error={emailError}
         valid={emailValid}
         onChange={handleEmailChange}
-        onBlur={() => setTouched((current) => ({ ...current, email: true }))}
+        onBlur={() => markTouched('email')}
       />
 
-      <PasswordField
-        value={password}
-        error={passwordError}
-        capsLockOn={capsLockOn}
-        onChange={handlePasswordChange}
-        onBlur={() => setTouched((current) => ({ ...current, password: true }))}
-      />
+      {isSetup ? (
+        <PasswordField
+          value={password}
+          placeholder="Crie uma senha (mínimo de 8 caracteres)"
+          autoComplete="new-password"
+          error={passwordError}
+          capsLockOn={capsLockOn}
+          onChange={handlePasswordChange}
+          onBlur={() => markTouched('password')}
+        />
+      ) : (
+        <PasswordField
+          value={password}
+          error={passwordError}
+          capsLockOn={capsLockOn}
+          onChange={handlePasswordChange}
+          onBlur={() => markTouched('password')}
+        />
+      )}
 
-      <SubmitButton status={status} />
+      {isSetup && (
+        <PasswordField
+          id="confirm-password"
+          label="Confirmar senha"
+          placeholder="Digite a senha novamente"
+          autoComplete="new-password"
+          value={confirmPassword}
+          error={confirmError}
+          capsLockOn={capsLockOn}
+          onChange={handleConfirmChange}
+          onBlur={() => markTouched('confirmPassword')}
+        />
+      )}
+
+      <SubmitButton status={status} mode={mode} />
       <StatusMessage status={status} message={message} />
     </form>
   )

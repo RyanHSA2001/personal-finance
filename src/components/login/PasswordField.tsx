@@ -3,6 +3,10 @@ import { CapsIcon, EyeIcon, EyeOffIcon, LockIcon } from '../ui/Icons'
 import TextField from '../ui/TextField'
 
 type PasswordFieldProps = {
+  id?: string
+  label?: string
+  placeholder?: string
+  autoComplete?: string
   value: string
   error?: string
   capsLockOn: boolean
@@ -11,17 +15,27 @@ type PasswordFieldProps = {
 }
 
 // Campo de senha com alternância de visibilidade e aviso de Caps Lock.
-function PasswordField({ value, error, capsLockOn, onChange, onBlur }: PasswordFieldProps) {
+function PasswordField({
+  id = 'password',
+  label = 'Senha',
+  placeholder = 'Digite sua senha',
+  autoComplete = 'current-password',
+  value,
+  error,
+  capsLockOn,
+  onChange,
+  onBlur,
+}: PasswordFieldProps) {
   const [visible, setVisible] = useState(false)
 
   return (
     <TextField
-      id="password"
-      label="Senha"
+      id={id}
+      label={label}
       type={visible ? 'text' : 'password'}
       value={value}
-      placeholder="Digite sua senha"
-      autoComplete="current-password"
+      placeholder={placeholder}
+      autoComplete={autoComplete}
       icon={<LockIcon className="field-icon" />}
       error={error}
       onChange={onChange}
