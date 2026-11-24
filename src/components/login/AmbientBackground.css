@@ -1,0 +1,115 @@
+.ambient-layer {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Luz que acompanha o cursor (variáveis --mx / --my definidas na página) */
+.spotlight {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    520px circle at var(--mx, 50%) var(--my, 40%),
+    rgba(139, 111, 240, 0.2),
+    transparent 70%
+  );
+  transition: opacity 400ms ease;
+}
+
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: 0.55;
+  animation: drift 22s ease-in-out infinite alternate;
+}
+
+.orb-one {
+  top: -120px;
+  left: -100px;
+  width: 380px;
+  height: 380px;
+  background: radial-gradient(circle, rgba(124, 92, 230, 0.55), transparent 70%);
+}
+
+.orb-two {
+  right: -140px;
+  bottom: -160px;
+  width: 440px;
+  height: 440px;
+  background: radial-gradient(circle, rgba(56, 96, 170, 0.45), transparent 70%);
+  animation-duration: 28s;
+  animation-delay: -6s;
+}
+
+.orb-three {
+  top: 40%;
+  left: 55%;
+  width: 260px;
+  height: 260px;
+  background: radial-gradient(circle, rgba(167, 139, 250, 0.3), transparent 70%);
+  animation-duration: 19s;
+  animation-delay: -11s;
+}
+
+.ring {
+  position: absolute;
+  border: 1px solid rgba(167, 139, 250, 0.09);
+  border-radius: 50%;
+}
+
+.ring-one {
+  top: -225px;
+  right: -120px;
+  width: 360px;
+  height: 360px;
+}
+
+.ring-two {
+  bottom: -240px;
+  left: -180px;
+  width: 360px;
+  height: 360px;
+  transform: scale(1.25);
+  border-color: rgba(167, 139, 250, 0.07);
+}
+
+.stars {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(1px 1px at 12% 22%, rgba(224, 216, 255, 0.55) 50%, transparent 100%),
+    radial-gradient(1px 1px at 83% 18%, rgba(198, 185, 255, 0.45) 50%, transparent 100%),
+    radial-gradient(1px 1px at 72% 72%, rgba(224, 216, 255, 0.38) 50%, transparent 100%),
+    radial-gradient(1px 1px at 22% 78%, rgba(198, 185, 255, 0.4) 50%, transparent 100%),
+    radial-gradient(1px 1px at 91% 48%, rgba(224, 216, 255, 0.35) 50%, transparent 100%),
+    radial-gradient(1px 1px at 42% 12%, rgba(198, 185, 255, 0.3) 50%, transparent 100%);
+  animation: twinkle 6s ease-in-out infinite alternate;
+}
+
+@keyframes drift {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(40px, -30px, 0) scale(1.12);
+  }
+}
+
+@keyframes twinkle {
+  from {
+    opacity: 0.6;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orb,
+  .stars {
+    animation: none;
+  }
+}

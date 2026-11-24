@@ -1,0 +1,21 @@
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 26px;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-subtle);
+  font-size: 11px;
+}
+
+.secure-icon {
+  width: 13px;
+  height: 13px;
+  stroke: var(--color-accent);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.6;
+  fill: none;
+}

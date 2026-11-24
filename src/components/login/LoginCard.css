@@ -1,0 +1,115 @@
+.login-card {
+  --tilt-x: 0;
+  --tilt-y: 0;
+
+  position: relative;
+  width: min(100%, 440px);
+  padding: 42px;
+  border-radius: 20px;
+  background:
+    linear-gradient(180deg, rgba(30, 27, 46, 0.92), rgba(16, 15, 25, 0.96)),
+    var(--color-surface);
+  box-shadow:
+    0 30px 80px -20px rgba(0, 0, 0, 0.6),
+    0 0 70px rgba(104, 79, 181, 0.12);
+  transform: perspective(1000px) rotateX(calc(var(--tilt-y) * -2.5deg)) rotateY(calc(var(--tilt-x) * 2.5deg));
+  transform-style: preserve-3d;
+  transition: transform 350ms cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 300ms ease;
+}
+
+/* Borda com luz que segue o cursor */
+.login-card::before {
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: radial-gradient(
+    320px circle at var(--mx, 50%) var(--my, 0%),
+    rgba(196, 178, 255, 0.85),
+    rgba(167, 139, 250, 0.18) 45%,
+    rgba(58, 53, 76, 0.5) 80%
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  content: '';
+  pointer-events: none;
+}
+
+/* Brilho suave dentro do cartão, também seguindo o cursor */
+.login-card::after {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    420px circle at var(--mx, 50%) var(--my, 0%),
+    rgba(167, 139, 250, 0.1),
+    transparent 60%
+  );
+  content: '';
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 300ms ease;
+}
+
+.login-card:hover::after {
+  opacity: 1;
+}
+
+.login-card[data-status='success'] {
+  box-shadow:
+    0 30px 80px -20px rgba(0, 0, 0, 0.6),
+    0 0 80px rgba(52, 211, 153, 0.18);
+}
+
+.login-card[data-status='success']::before {
+  background: radial-gradient(
+    320px circle at var(--mx, 50%) var(--my, 0%),
+    rgba(142, 240, 196, 0.9),
+    rgba(52, 211, 153, 0.2) 45%,
+    rgba(58, 53, 76, 0.5) 80%
+  );
+}
+
+.card-body {
+  position: relative;
+  z-index: 1;
+}
+
+.card-body.is-shaking {
+  animation: card-shake 420ms cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+@keyframes card-shake {
+  10%,
+  90% {
+    transform: translateX(-1px);
+  }
+  20%,
+  80% {
+    transform: translateX(3px);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translateX(-6px);
+  }
+  40%,
+  60% {
+    transform: translateX(6px);
+  }
+}
+
+@media (max-width: 520px) {
+  .login-card {
+    padding: 32px 24px;
+  }
+}
+
+@media (pointer: coarse), (prefers-reduced-motion: reduce) {
+  .login-card {
+    transform: none;
+  }
+}

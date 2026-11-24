@@ -1,0 +1,102 @@
+.submit-button {
+  position: relative;
+  display: flex;
+  height: 50px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 6px;
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #c4b2ff 0%, #a78bfa 55%, #8b6ef0 100%);
+  color: var(--color-accent-contrast);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  box-shadow:
+    0 10px 30px -10px rgba(167, 139, 250, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
+}
+
+/* Brilho que varre o botão ao passar o cursor */
+.submit-button::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.45) 50%, transparent 70%);
+  transform: translateX(-120%);
+  content: '';
+  pointer-events: none;
+}
+
+.submit-button:hover:not(:disabled)::after {
+  transform: translateX(120%);
+  transition: transform 700ms ease;
+}
+
+.submit-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow:
+    0 16px 36px -12px rgba(167, 139, 250, 0.8),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  filter: brightness(1.05);
+}
+
+.submit-button:active:not(:disabled) {
+  transform: translateY(0) scale(0.99);
+}
+
+.submit-button:disabled {
+  cursor: progress;
+}
+
+.submit-button[data-status='submitting'] {
+  filter: saturate(0.75);
+}
+
+.submit-button[data-status='success'] {
+  background: linear-gradient(135deg, #6ee7b7 0%, #34d399 100%);
+  box-shadow: 0 10px 30px -10px rgba(52, 211, 153, 0.7);
+}
+
+.submit-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.submit-icon {
+  width: 17px;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+  fill: none;
+  transition: transform 180ms ease;
+}
+
+.submit-button:hover:not(:disabled) .submit-icon {
+  transform: translateX(3px);
+}
+
+.spinner {
+  width: 15px;
+  height: 15px;
+  border: 2px solid rgba(23, 17, 38, 0.25);
+  border-top-color: var(--color-accent-contrast);
+  border-radius: 50%;
+  animation: spin 800ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.submit-button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
