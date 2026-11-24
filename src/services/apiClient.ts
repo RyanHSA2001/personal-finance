@@ -24,16 +24,18 @@ type RequestOptions = {
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const headers: Record<string, string> = {}
   const token = getStoredToken()
+  // FormData (upload de arquivos) vai como multipart; o navegador define o Content-Type com o boundary.
+  const isForm = options.body instanceof FormData
 
   if (token) headers.Authorization = `Bearer ${token}`
-  if (options.body !== undefined) headers['Content-Type'] = 'application/json'
+  if (options.body !== undefined && !isForm) headers['Content-Type'] = 'application/json'
 
   let response: Response
   try {
     response = await fetch(path, {
       method: options.method ?? 'GET',
       headers,
-      body: options.body === undefined ? undefined : JSON.stringify(options.body),
+      body: options.body === undefined ? undefined : isForm ? (options.body as FormData) : JSON.stringify(options.body),
       signal: options.signal,
     })
   } catch (error) {

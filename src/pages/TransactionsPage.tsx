@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react'
 import MonthPicker from '../components/finance/MonthPicker'
+import OfxImport from '../components/finance/OfxImport'
 import TransactionForm from '../components/finance/TransactionForm'
 import TransactionRow from '../components/finance/TransactionRow'
 import { currentMonth } from '../lib/format'
@@ -54,14 +55,25 @@ function TransactionsPage() {
       </div>
 
       {loaded ? (
-        <section className="card">
-          <h2 className="card-title">Novo lançamento</h2>
-          <TransactionForm
-            accounts={accounts.data ?? []}
-            categories={categories.data ?? []}
-            onSaved={refreshAfterChange}
-          />
-        </section>
+        <>
+          <section className="card">
+            <h2 className="card-title">Novo lançamento</h2>
+            <TransactionForm
+              accounts={accounts.data ?? []}
+              categories={categories.data ?? []}
+              onSaved={refreshAfterChange}
+            />
+          </section>
+
+          <section className="card">
+            <h2 className="card-title">Importar extrato OFX</h2>
+            <OfxImport
+              accounts={accounts.data ?? []}
+              categories={categories.data ?? []}
+              onImported={refreshAfterChange}
+            />
+          </section>
+        </>
       ) : (
         <p className="state-message">Carregando contas e categorias...</p>
       )}

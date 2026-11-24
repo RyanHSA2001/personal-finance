@@ -142,3 +142,94 @@
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
   font-size: 13px;
 }
+
+/* ---------- Importação OFX ---------- */
+
+.ofx-file {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+}
+
+.ofx-file-name {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text-subtle);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ofx-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ofx-summary .ofx-income {
+  color: var(--color-positive);
+}
+
+.ofx-list {
+  display: grid;
+}
+
+.ofx-select-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 8px;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.ofx-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) 200px auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.ofx-row[data-disabled] {
+  opacity: 0.5;
+}
+
+.ofx-row input[type='checkbox'],
+.ofx-select-all input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-accent);
+  cursor: pointer;
+}
+
+/* O rótulo "Categoria" de cada linha fica só para leitores de tela. */
+.ofx-category .field-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.ofx-category .select-field {
+  gap: 0;
+}
+
+.ofx-actions {
+  gap: 8px;
+}
+
+@media (max-width: 640px) {
+  .ofx-row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .ofx-category {
+    grid-column: 2 / -1;
+  }
+}

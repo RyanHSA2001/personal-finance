@@ -114,6 +114,42 @@ export type BudgetInput = {
   monthlyLimitCents: number
 }
 
+// ---------- Importação OFX ----------
+
+export type OfxPreviewTransaction = {
+  externalId: string
+  type: 'income' | 'expense'
+  amountCents: number
+  description: string
+  occurredOn: string
+  ofxType: string
+  alreadyImported: boolean
+}
+
+export type OfxPreview = {
+  bankId: string | null
+  accountNumber: string | null
+  currency: string | null
+  startDate: string | null
+  endDate: string | null
+  ledgerBalanceCents: number | null
+  transactions: OfxPreviewTransaction[]
+}
+
+export type OfxImportItem = {
+  externalId: string
+  type: 'income' | 'expense'
+  amountCents: number
+  description: string
+  occurredOn: string
+  categoryId: string | null
+}
+
+export type OfxImportResult = {
+  imported: number
+  skipped: number
+}
+
 type Created = { id: string }
 
 function withQuery(path: string, params: Record<string, string | undefined>): string {
@@ -147,6 +183,18 @@ export const financeApi = {
     create: (input: TransactionInput) =>
       apiRequest<Created>('/transactions', { method: 'POST', body: input }),
     remove: (id: string) => apiRequest<void>(`/transactions/${id}`, { method: 'DELETE' }),
+
+    // Lê o arquivo OFX no servidor e devolve os lançamentos (com aviso dos já importados na conta).
+    previewOfx: (file: File, accountId?: string) => {
+      const form = new FormData()
+      form.append('file', file)
+      return apiRequest<OfxPreview>(withQuery('/transactions/import/ofx/preview', { accountId }), {
+        method: 'POST',
+        body: form,
+      })
+    },
+    importOfx: (input: { accountId: string; transactions: OfxImportItem[] }) =>
+      apiRequest<OfxImportResult>('/transactions/import/ofx', { method: 'POST', body: input }),
   },
 
   budgets: {
