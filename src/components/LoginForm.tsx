@@ -1,45 +1,81 @@
 import { useState, type FormEvent } from 'react'
 import './LoginForm.css'
 
+const TOKEN_KEY = 'personalcontrol.token'
+
+type LoginResponse = {
+  accessToken: string
+  expiresAtUtc: string
+}
+
 function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
-  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [notice, setNotice] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
-    if (!username.trim()) {
-      setNotice('Informe seu usuário para continuar.')
+    if (!email.trim() || !password) {
+      setNotice('Informe e-mail e senha para continuar.')
       return
     }
 
-    setNotice('A tela está pronta. A autenticação será conectada ao configurar o backend.')
+    setIsSubmitting(true)
+    setNotice('')
+
+    try {
+      const response = await fetch('/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), password }),
+      })
+
+      if (response.status === 401) {
+        setNotice('E-mail ou senha incorretos.')
+        return
+      }
+
+      if (!response.ok) {
+        setNotice('Não foi possível entrar agora. Tente novamente.')
+        return
+      }
+
+      const data: LoginResponse = await response.json()
+      sessionStorage.setItem(TOKEN_KEY, data.accessToken)
+      setPassword('')
+      setNotice('Login realizado com sucesso.')
+    } catch {
+      setNotice('Não foi possível conectar ao servidor.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
     <form className="login-form" onSubmit={handleSubmit}>
       <div className="form-field">
-        <label htmlFor="username">Usuário</label>
+        <label htmlFor="email">E-mail</label>
         <div className="input-wrap">
           <svg className="field-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <circle cx="12" cy="8" r="3.5" />
             <path d="M5 20v-1.5a7 7 0 0 1 14 0V20H5Z" />
           </svg>
           <input
-            id="username"
-            name="username"
-            type="text"
-            placeholder="Digite seu usuário"
-            autoComplete="username"
+            id="email"
+            name="email"
+            type="email"
+            placeholder="Digite seu e-mail"
+            autoComplete="email"
             autoCapitalize="none"
             spellCheck={false}
-            maxLength={64}
+            maxLength={254}
             required
-            value={username}
+            value={email}
             onChange={(event) => {
-              setUsername(event.target.value)
+              setEmail(event.target.value)
               setNotice('')
             }}
           />
@@ -89,8 +125,8 @@ function LoginForm() {
         </div>
       </div>
 
-      <button className="submit-button" type="submit">
-        Entrar
+      <button className="submit-button" type="submit" disabled={isSubmitting}>
+        {isSubmitting ? 'Entrando...' : 'Entrar'}
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path d="M5 12h14m-6-6 6 6-6 6" />
         </svg>
