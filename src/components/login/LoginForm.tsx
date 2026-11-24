@@ -35,20 +35,20 @@ function LoginForm({ mode, status, message, onSubmit, onEdit, onFailed }: LoginF
   const [submitted, setSubmitted] = useState(false)
   const capsLockOn = useCapsLock()
 
-  const isSetup = mode === 'setup'
+  const isRegister = mode === 'register'
   const values: AuthFormValues = { name, email, password, confirmPassword }
-  const errors: Partial<Record<Field, string>> = isSetup ? validateSetup(values) : validateLogin(values)
+  const errors: Partial<Record<Field, string>> = isRegister ? validateSetup(values) : validateLogin(values)
 
   // Mostra o erro de um campo só depois que ele foi tocado ou o formulário foi enviado.
   const errorFor = (field: Field) => (submitted || touched[field] ? errors[field] : undefined)
 
-  const nameError = isSetup ? errorFor('name') : undefined
+  const nameError = isRegister ? errorFor('name') : undefined
   const emailError = errorFor('email')
   const passwordError = errorFor('password')
-  const confirmError = isSetup ? errorFor('confirmPassword') : undefined
+  const confirmError = isRegister ? errorFor('confirmPassword') : undefined
 
   const emailValid = isValidEmail(email)
-  const nameValid = isSetup && name.trim().length > 0 && !errors.name
+  const nameValid = isRegister && name.trim().length > 0 && !errors.name
 
   function markTouched(field: Field) {
     setTouched((current) => ({ ...current, [field]: true }))
@@ -99,7 +99,7 @@ function LoginForm({ mode, status, message, onSubmit, onEdit, onFailed }: LoginF
 
   return (
     <form className="login-form" onSubmit={handleSubmit} noValidate>
-      {isSetup && (
+      {isRegister && (
         <TextField
           id="name"
           label="Nome"
@@ -130,7 +130,7 @@ function LoginForm({ mode, status, message, onSubmit, onEdit, onFailed }: LoginF
         onBlur={() => markTouched('email')}
       />
 
-      {isSetup ? (
+      {isRegister ? (
         <PasswordField
           value={password}
           placeholder="Crie uma senha (mínimo de 8 caracteres)"
@@ -150,7 +150,7 @@ function LoginForm({ mode, status, message, onSubmit, onEdit, onFailed }: LoginF
         />
       )}
 
-      {isSetup && (
+      {isRegister && (
         <PasswordField
           id="confirm-password"
           label="Confirmar senha"

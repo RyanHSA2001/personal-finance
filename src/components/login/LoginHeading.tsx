@@ -6,17 +6,16 @@ type LoginHeadingProps = {
 }
 
 // Cabeçalho do cartão: selo, título e subtítulo.
-// Em modo 'setup' (primeiro acesso) mostra o texto de cadastro.
 function LoginHeading({ mode }: LoginHeadingProps) {
-  if (mode === 'setup') {
+  if (mode === 'register') {
     return (
       <div className="card-heading">
         <span className="eyebrow">
           <span className="eyebrow-dot" aria-hidden="true" />
-          Primeiro acesso
+          Nova conta
         </span>
-        <h1 id="login-title">Crie seu acesso</h1>
-        <p>Ainda não há usuários neste aplicativo. Cadastre-se para começar.</p>
+        <h1 id="login-title">Crie sua conta</h1>
+        <p>Cadastre-se para começar a organizar suas finanças.</p>
       </div>
     )
   }

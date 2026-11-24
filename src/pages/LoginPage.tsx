@@ -7,7 +7,6 @@ import LoginForm from '../components/login/LoginForm'
 import LoginHeading from '../components/login/LoginHeading'
 import { useLogin, type AuthFormValues, type AuthMode } from '../hooks/useLogin'
 import { usePointerLight } from '../hooks/usePointerLight'
-import { fetchRequiresSetup } from '../services/authService'
 import './LoginPage.css'
 
 type LoginPageProps = {
@@ -17,8 +16,7 @@ type LoginPageProps = {
 // Tempo que a mensagem de sucesso fica na tela antes de entrar no aplicativo.
 const SUCCESS_DELAY_MS = 900
 
-// Página de login: monta o fundo, o cartão e liga o formulário à API.
-// Se a API ainda não tiver nenhum usuário, mostra o cadastro de primeiro acesso.
+// Página de login e cadastro: permite alternar livremente entre entrar e criar conta.
 function LoginPage({ onAuthenticated }: LoginPageProps) {
   const pageRef = useRef<HTMLElement>(null)
   usePointerLight(pageRef)
@@ -33,22 +31,21 @@ function LoginPage({ onAuthenticated }: LoginPageProps) {
     return () => window.clearTimeout(timer)
   }, [status, onAuthenticated])
 
-  useEffect(() => {
-    const controller = new AbortController()
-
-    fetchRequiresSetup(controller.signal).then((requiresSetup) => {
-      if (requiresSetup) setMode('setup')
-    })
-
-    return () => controller.abort()
-  }, [])
-
   const handleFailed = useCallback(() => setShakeKey((current) => current + 1), [])
 
   // Ao digitar depois de um erro, limpa a mensagem para não ficar desatualizada.
   const handleEdit = useCallback(() => {
     if (status === 'error') reset()
   }, [status, reset])
+
+  const handleModeChange = useCallback(
+    (nextMode: AuthMode) => {
+      if (nextMode === mode || status === 'submitting' || status === 'success') return
+      reset()
+      setMode(nextMode)
+    },
+    [mode, status, reset],
+  )
 
   const handleSubmit = useCallback((values: AuthFormValues) => submit(values, mode), [submit, mode])
 
@@ -58,8 +55,30 @@ function LoginPage({ onAuthenticated }: LoginPageProps) {
       <Brand />
 
       <LoginCard shakeKey={shakeKey} status={status}>
+        <div className="auth-tabs" role="tablist" aria-label="Modo de acesso">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mode === 'login'}
+            className={`auth-tab${mode === 'login' ? ' is-active' : ''}`}
+            onClick={() => handleModeChange('login')}
+          >
+            Entrar
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mode === 'register'}
+            className={`auth-tab${mode === 'register' ? ' is-active' : ''}`}
+            onClick={() => handleModeChange('register')}
+          >
+            Criar conta
+          </button>
+        </div>
+
         <LoginHeading mode={mode} />
         <LoginForm
+          key={mode}
           mode={mode}
           status={status}
           message={message}

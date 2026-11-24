@@ -3,8 +3,8 @@ import { login, register, type AuthResult } from '../services/authService'
 
 export type LoginStatus = 'idle' | 'submitting' | 'success' | 'error'
 
-// 'login': usuário já cadastrado. 'setup': primeiro acesso, ainda não há usuários.
-export type AuthMode = 'login' | 'setup'
+// 'login': entrar em conta existente. 'register': criar nova conta.
+export type AuthMode = 'login' | 'register'
 
 // Campos do formulário. Em modo 'login', name e confirmPassword ficam vazios.
 export type AuthFormValues = {
@@ -42,7 +42,7 @@ export function useLogin() {
 
     const email = values.email.trim()
     const result =
-      mode === 'setup'
+      mode === 'register'
         ? await register({ name: values.name.trim(), email, password: values.password }, controller.signal)
         : await login({ email, password: values.password }, controller.signal)
 
@@ -50,7 +50,7 @@ export function useLogin() {
 
     if (result.ok) {
       setStatus('success')
-      setMessage(mode === 'setup' ? MESSAGES.accountCreated : MESSAGES.loggedIn)
+      setMessage(mode === 'register' ? MESSAGES.accountCreated : MESSAGES.loggedIn)
     } else {
       setStatus('error')
       setMessage(

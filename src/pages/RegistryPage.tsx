@@ -1,7 +1,7 @@
 import { useCallback, useState, type FormEvent, type ReactNode } from 'react'
 import Select, { type SelectOption } from '../components/ui/Select'
 import { ApiError } from '../services/apiClient'
-import { formatMoney, parseMoneyInput, currentMonth } from '../lib/format'
+import { formatMoney, parseMoneyInput, parseSignedMoneyInput, currentMonth } from '../lib/format'
 import { useRequest } from '../hooks/useRequest'
 import {
   ACCOUNT_KIND_LABELS,
@@ -12,6 +12,9 @@ import {
 
 // Cadastros: contas, categorias e orçamentos. Base para os lançamentos e os gráficos.
 function RegistryPage() {
+  const [categoriesVersion, setCategoriesVersion] = useState(0)
+  const notifyCategoriesChanged = useCallback(() => setCategoriesVersion((version) => version + 1), [])
+
   return (
     <div className="stack">
       <div className="page-header">
@@ -23,10 +26,10 @@ function RegistryPage() {
 
       <div className="grid grid-2">
         <AccountsPanel />
-        <CategoriesPanel />
+        <CategoriesPanel onChanged={notifyCategoriesChanged} />
       </div>
 
-      <BudgetsPanel />
+      <BudgetsPanel categoriesVersion={categoriesVersion} />
     </div>
   )
 }
@@ -67,7 +70,7 @@ function AccountsPanel() {
 
     if (!name.trim()) return setFormError('Informe o nome da conta.')
 
-    const balance = initialBalance.trim() ? parseMoneyInput(initialBalance) : 0
+    const balance = initialBalance.trim() ? parseSignedMoneyInput(initialBalance) : 0
     if (balance === null) return setFormError('Saldo inicial inválido. Use vírgula para os centavos.')
 
     setSaving(true)
@@ -151,7 +154,7 @@ const CATEGORY_KIND_OPTIONS: SelectOption[] = [
   { value: 'income', label: 'Receita' },
 ]
 
-function CategoriesPanel() {
+function CategoriesPanel({ onChanged }: { onChanged: () => void }) {
   const load = useCallback((signal: AbortSignal) => financeApi.categories.list(signal), [])
   const { data, error, reload } = useRequest('categories', load)
 
@@ -172,6 +175,7 @@ function CategoriesPanel() {
       await financeApi.categories.create({ name: name.trim(), kind, color })
       setName('')
       reload()
+      onChanged()
     } catch (caught) {
       setFormError(errorMessage(caught, 'Não foi possível criar a categoria.'))
     } finally {
@@ -188,6 +192,7 @@ function CategoriesPanel() {
     try {
       await financeApi.categories.remove(id)
       reload()
+      onChanged()
     } catch (caught) {
       setFormError(errorMessage(caught, 'Não foi possível excluir a categoria.'))
     }
@@ -252,13 +257,13 @@ function CategoriesPanel() {
 
 // ---------- Orçamentos ----------
 
-function BudgetsPanel() {
+function BudgetsPanel({ categoriesVersion }: { categoriesVersion: number }) {
   const month = currentMonth()
   const loadBudgets = useCallback((signal: AbortSignal) => financeApi.budgets.list(month, signal), [month])
   const loadCategories = useCallback((signal: AbortSignal) => financeApi.categories.list(signal), [])
 
-  const budgets = useRequest(month, loadBudgets)
-  const categories = useRequest('categories', loadCategories)
+  const budgets = useRequest(`budgets:${month}:${categoriesVersion}`, loadBudgets)
+  const categories = useRequest(`categories:${categoriesVersion}`, loadCategories)
 
   const [categoryId, setCategoryId] = useState('')
   const [limit, setLimit] = useState('')
@@ -271,7 +276,9 @@ function BudgetsPanel() {
     label: category.name,
     color: category.color,
   }))
-  const selectedCategory = categoryId || expenseCategories[0]?.id || ''
+  const selectedCategory = expenseCategories.some((category) => category.id === categoryId)
+    ? categoryId
+    : (expenseCategories[0]?.id ?? '')
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()

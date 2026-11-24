@@ -33,9 +33,13 @@ function TransactionForm({ accounts, categories, onSaved }: TransactionFormProps
   const [saving, setSaving] = useState(false)
 
   // Valores padrão derivados das listas, sem efeitos: a primeira conta é a escolhida até o usuário trocar.
-  const selectedAccount = accountId || accounts[0]?.id || ''
+  const selectedAccount = accounts.some((account) => account.id === accountId)
+    ? accountId
+    : (accounts[0]?.id ?? '')
   const destinationOptions = accounts.filter((account) => account.id !== selectedAccount)
-  const selectedDestination = transferAccountId || destinationOptions[0]?.id || ''
+  const selectedDestination = destinationOptions.some((account) => account.id === transferAccountId)
+    ? transferAccountId
+    : (destinationOptions[0]?.id ?? '')
   const categoryKind = type === 'income' ? 'income' : 'expense'
 
   const accountOptions: SelectOption[] = accounts.map((account) => ({
@@ -139,7 +143,10 @@ function TransactionForm({ accounts, categories, onSaved }: TransactionFormProps
           value={selectedAccount}
           options={accountOptions}
           placeholder="Escolha uma conta"
-          onChange={setAccountId}
+          onChange={(nextAccountId) => {
+            setAccountId(nextAccountId)
+            if (nextAccountId === transferAccountId) setTransferAccountId('')
+          }}
         />
 
         {type === 'transfer' ? (

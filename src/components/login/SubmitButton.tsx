@@ -11,10 +11,10 @@ type SubmitButtonProps = {
 function SubmitButton({ status, mode }: SubmitButtonProps) {
   const isBusy = status === 'submitting'
   const isDone = status === 'success'
-  const isSetup = mode === 'setup'
+  const isRegister = mode === 'register'
 
-  const idleLabel = isSetup ? 'Criar conta' : 'Entrar'
-  const busyLabel = isSetup ? 'Criando conta...' : 'Entrando...'
+  const idleLabel = isRegister ? 'Criar conta' : 'Entrar'
+  const busyLabel = isRegister ? 'Criando conta...' : 'Entrando...'
 
   return (
     <button className="submit-button" type="submit" disabled={isBusy || isDone} data-status={status}>

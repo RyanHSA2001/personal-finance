@@ -69,7 +69,7 @@ async function postAuth(path: string, body: unknown, signal?: AbortSignal): Prom
       return { ok: false, reason: 'invalid-credentials' }
     }
 
-    if (response.status === 400 || response.status === 403) {
+    if (response.status === 400 || response.status === 403 || response.status === 409) {
       return { ok: false, reason: 'rejected', message: await readErrorMessage(response) }
     }
 

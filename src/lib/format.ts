@@ -13,11 +13,20 @@ export function formatPercent(ratio: number): string {
 
 // Converte o texto digitado ("1.234,56", "R$ 90", "12,5") em centavos. Retorna null se inválido ou zero.
 export function parseMoneyInput(value: string): number | null {
-  const normalized = value.replace(/R\$|\s/g, '').replace(/\./g, '').replace(',', '.')
-  const amount = Number(normalized)
+  const cents = parseSignedMoneyInput(value)
+  return cents !== null && cents > 0 ? cents : null
+}
 
-  if (!normalized || !Number.isFinite(amount) || amount <= 0) return null
-  return Math.round(amount * 100)
+// Converte valor monetário que pode ser positivo, zero ou negativo (ex.: saldo inicial).
+export function parseSignedMoneyInput(value: string): number | null {
+  const normalized = value.replace(/R\$|\s/g, '').replace(/\./g, '').replace(',', '.')
+  if (!normalized) return null
+
+  const amount = Number(normalized)
+  if (!Number.isFinite(amount)) return null
+
+  const cents = Math.round(amount * 100)
+  return cents === 0 ? 0 : cents
 }
 
 // Mês no formato AAAA-MM.
