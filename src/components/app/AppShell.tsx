@@ -3,11 +3,13 @@ import { useCardLight } from '../../hooks/useCardLight'
 import '../../styles/app.css'
 import AppBackground from './AppBackground'
 
-export type AppView = 'home' | 'transactions' | 'registry'
+export type AppView = 'home' | 'transactions' | 'cards' | 'open-finance' | 'registry'
 
 const NAV_ITEMS: { view: AppView; label: string }[] = [
   { view: 'home', label: 'Início' },
   { view: 'transactions', label: 'Lançamentos' },
+  { view: 'cards', label: 'Cartões' },
+  { view: 'open-finance', label: 'Open Finance' },
   { view: 'registry', label: 'Cadastros' },
 ]
 

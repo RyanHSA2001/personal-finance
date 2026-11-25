@@ -76,6 +76,18 @@ function HomePage({ onNavigate }: HomePageProps) {
           tone={netTone}
           hint={data.monthNetCents >= 0 ? 'Sobrou dinheiro' : 'Gastou mais do que recebeu'}
         />
+        <Kpi
+          label="Faturas no mês"
+          cents={data.monthCardInvoicesCents}
+          tone={data.openCardInvoicesCents > 0 ? 'negative' : 'accent'}
+          hint={
+            data.monthCardInvoicesCents === 0
+              ? 'Sem gastos em cartão'
+              : data.openCardInvoicesCents > 0
+                ? `Em aberto: ${formatMoney(data.openCardInvoicesCents)}`
+                : 'Todas as faturas pagas'
+          }
+        />
       </div>
 
       <div className="grid grid-2">

@@ -80,6 +80,8 @@ export type Dashboard = {
   monthIncomeCents: number
   monthExpenseCents: number
   monthNetCents: number
+  monthCardInvoicesCents: number
+  openCardInvoicesCents: number
   accounts: Account[]
   expenseByCategory: CategorySpend[]
   monthlyTrend: MonthTrend[]

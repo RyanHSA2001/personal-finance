@@ -1,0 +1,302 @@
+/* Estilos do módulo de cartões (cartões visuais, faturas, parcelas e avisos de segurança). */
+
+.cards-grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+
+.card-tile {
+  --card-accent: #7c3aed;
+
+  position: relative;
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  background:
+    radial-gradient(240px circle at 100% 0%, color-mix(in srgb, var(--card-accent) 42%, transparent), transparent 70%),
+    linear-gradient(145deg, color-mix(in srgb, var(--card-accent) 22%, #141221), #0f0e19 72%);
+  color: var(--color-text);
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    transform 240ms var(--ease-out),
+    border-color 220ms ease,
+    box-shadow 240ms ease;
+}
+
+.card-tile:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--card-accent) 65%, white);
+  box-shadow: 0 22px 44px -22px color-mix(in srgb, var(--card-accent) 55%, black);
+}
+
+.card-tile[aria-pressed='true'] {
+  border-color: color-mix(in srgb, var(--card-accent) 85%, white);
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--card-accent) 55%, transparent),
+    0 24px 48px -22px color-mix(in srgb, var(--card-accent) 65%, black);
+}
+
+.card-tile.is-archived {
+  opacity: 0.6;
+  filter: saturate(0.55);
+}
+
+.card-tile-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.card-tile-identity {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.card-tile-name {
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: -0.2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-tile-issuer {
+  color: var(--color-text-muted);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-tile-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.card-tile-middle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.card-chip-svg {
+  width: 34px;
+  height: 24px;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.04));
+}
+
+.card-digits {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 14px;
+  letter-spacing: 1.5px;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.card-tile-footer {
+  display: grid;
+  gap: 8px;
+}
+
+.card-tile-metrics {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.card-tile-metric-label {
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.card-tile-metric-value {
+  font-size: 17px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.card-tile-sub {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--color-text-subtle);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Aviso de segurança ---------- */
+
+.security-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid rgba(52, 211, 153, 0.28);
+  border-radius: 12px;
+  background: rgba(52, 211, 153, 0.06);
+  color: var(--color-text-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.security-notice svg {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  stroke: var(--color-positive);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ---------- Cores ---------- */
+
+.color-picker-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 44px;
+}
+
+.color-swatch {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: transform 160ms ease, border-color 160ms ease;
+}
+
+.color-swatch:hover {
+  transform: scale(1.1);
+}
+
+.color-swatch[aria-pressed='true'] {
+  border-color: #ffffff;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25);
+}
+
+.color-picker-row input[type='color'] {
+  width: 36px;
+  height: 30px;
+  min-height: 30px;
+  padding: 2px;
+  border-radius: 8px;
+}
+
+/* ---------- Status da fatura e ações ---------- */
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status-badge.is-open {
+  background: rgba(96, 165, 250, 0.14);
+  color: var(--color-info);
+  border: 1px solid rgba(96, 165, 250, 0.35);
+}
+
+.status-badge.is-closed {
+  background: rgba(251, 191, 36, 0.14);
+  color: var(--color-warning);
+  border: 1px solid rgba(251, 191, 36, 0.35);
+}
+
+.status-badge.is-paid {
+  background: rgba(52, 211, 153, 0.14);
+  color: var(--color-positive);
+  border: 1px solid rgba(52, 211, 153, 0.35);
+}
+
+.status-badge.is-overdue {
+  background: rgba(248, 113, 113, 0.14);
+  color: var(--color-negative);
+  border: 1px solid rgba(248, 113, 113, 0.35);
+}
+
+.workspace-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.invoice-summary-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: rgba(12, 11, 20, 0.55);
+}
+
+.invoice-metric {
+  display: grid;
+  gap: 4px;
+}
+
+.invoice-metric-label {
+  color: var(--color-text-subtle);
+  font-size: 12px;
+}
+
+.invoice-metric-value {
+  font-size: 18px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.pay-box {
+  padding: 16px;
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  border-radius: 14px;
+  background: rgba(167, 139, 250, 0.06);
+}
+
+.paid-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  border-radius: 14px;
+  background: rgba(52, 211, 153, 0.07);
+  font-size: 14px;
+}
+
+.field-hint {
+  color: var(--color-text-subtle);
+  font-size: 12px;
+}
+
+.card-tx-delete-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}

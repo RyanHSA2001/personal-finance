@@ -2,8 +2,10 @@ import { useCallback, useEffect, useState } from 'react'
 import AppShell, { type AppView } from './components/app/AppShell'
 import { AUTH_EXPIRED_EVENT } from './services/apiClient'
 import { clearStoredToken, getStoredToken } from './services/authService'
+import CardsPage from './pages/CardsPage'
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
+import OpenFinancePage from './pages/OpenFinancePage'
 import RegistryPage from './pages/RegistryPage'
 import TransactionsPage from './pages/TransactionsPage'
 
@@ -34,6 +36,8 @@ function App() {
     <AppShell view={view} onNavigate={setView} onLogout={handleLogout}>
       {view === 'home' && <HomePage onNavigate={setView} />}
       {view === 'transactions' && <TransactionsPage />}
+      {view === 'cards' && <CardsPage onNavigate={setView} />}
+      {view === 'open-finance' && <OpenFinancePage onNavigate={setView} />}
       {view === 'registry' && <RegistryPage />}
     </AppShell>
   )
