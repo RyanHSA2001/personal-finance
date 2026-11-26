@@ -1,4 +1,4 @@
-import { useCallback, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import type { AppView } from '../components/app/AppShell'
 import { ShieldIcon } from '../components/ui/Icons'
 import Select, { type SelectOption } from '../components/ui/Select'
@@ -59,6 +59,15 @@ function OpenFinancePage({ onNavigate }: OpenFinancePageProps) {
   const [syncingId, setSyncingId] = useState<string | null>(null)
   const [pageError, setPageError] = useState('')
   const [lastResult, setLastResult] = useState<SyncItemResult | null>(null)
+  const [pollingNote, setPollingNote] = useState('')
+  const [copiedWebhook, setCopiedWebhook] = useState(false)
+  const pollTimerRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (pollTimerRef.current !== null) window.clearTimeout(pollTimerRef.current)
+    }
+  }, [])
 
   const [investmentsByItem, setInvestmentsByItem] = useState<Record<string, PluggyInvestment[]>>({})
   const [loadingInvId, setLoadingInvId] = useState<string | null>(null)
@@ -158,18 +167,60 @@ function OpenFinancePage({ onNavigate }: OpenFinancePageProps) {
     }
   }
 
+  function scheduleFollowUpSync(itemId: string, remainingAttempts: number) {
+    if (remainingAttempts <= 0) {
+      setPollingNote('')
+      return
+    }
+
+    setPollingNote('O banco ainda está processando a atualização… verificando novamente em 10s automaticamente.')
+    pollTimerRef.current = window.setTimeout(async () => {
+      try {
+        const result = await openFinanceApi.syncItem(itemId, Number(days), false)
+        setLastResult(result)
+        reloadAll()
+        if (result.status.toUpperCase() === 'UPDATING') {
+          scheduleFollowUpSync(itemId, remainingAttempts - 1)
+        } else {
+          setPollingNote('')
+        }
+      } catch {
+        setPollingNote('')
+      }
+    }, 10_000)
+  }
+
   async function handleSync(item: PluggyItem, triggerRemoteRefresh: boolean) {
+    if (pollTimerRef.current !== null) {
+      window.clearTimeout(pollTimerRef.current)
+      pollTimerRef.current = null
+    }
     setPageError('')
+    setPollingNote('')
     setLastResult(null)
     setSyncingId(item.id)
     try {
       const result = await openFinanceApi.syncItem(item.id, Number(days), triggerRemoteRefresh)
       setLastResult(result)
       reloadAll()
+      if (result.status.toUpperCase() === 'UPDATING') {
+        scheduleFollowUpSync(item.id, 3)
+      }
     } catch (caught) {
       setPageError(caught instanceof ApiError ? caught.message : 'Não foi possível sincronizar esta conexão.')
     } finally {
       setSyncingId(null)
+    }
+  }
+
+  async function handleCopyWebhook() {
+    const url = `${window.location.origin}/open-finance/webhook`
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopiedWebhook(true)
+      window.setTimeout(() => setCopiedWebhook(false), 2500)
+    } catch {
+      // Fallback silencioso se o navegador bloquear clipboard.
     }
   }
 
@@ -539,6 +590,40 @@ function OpenFinancePage({ onNavigate }: OpenFinancePageProps) {
           </section>
         )
       })}
+
+      {pollingNote && (
+        <p className="of-sync-banner" role="status">
+          {pollingNote}
+        </p>
+      )}
+
+      {configured && (
+        <section className="card">
+          <div className="card-head">
+            <div>
+              <h2 className="card-title">Sincronização automática &amp; Webhook</h2>
+              <p className="page-subtitle" style={{ marginTop: 4 }}>
+                O servidor sincroniza automaticamente a cada <strong>2 horas</strong>. Para receber lançamentos assim que o
+                Pluggy atualizar seu banco (sem precisar clicar manualmente), cadastre a URL abaixo em{' '}
+                <strong>dashboard.pluggy.ai → Webhooks</strong>:
+              </p>
+            </div>
+          </div>
+
+          <pre className="of-code">{`${window.location.origin}/open-finance/webhook`}</pre>
+
+          <div className="form-actions" style={{ marginTop: 14, gap: 10 }}>
+            <button type="button" className="btn btn-primary" onClick={handleCopyWebhook}>
+              {copiedWebhook ? 'URL copiada!' : 'Copiar URL do Webhook'}
+            </button>
+          </div>
+
+          <p className="field-hint" style={{ marginTop: 12 }}>
+            Eventos recomendados no Pluggy: <code>item/updated</code>, <code>transactions/created</code> e{' '}
+            <code>transactions/updated</code>.
+          </p>
+        </section>
+      )}
     </div>
   )
 }
