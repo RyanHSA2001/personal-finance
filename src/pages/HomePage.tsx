@@ -86,14 +86,16 @@ function HomePage({ onNavigate }: HomePageProps) {
           hint={data.monthNetCents >= 0 ? 'Sobrou dinheiro' : 'Gastou mais do que recebeu'}
         />
         <Kpi
-          label="Faturas no mês"
-          cents={data.monthCardInvoicesCents}
+          label={month === currentMonth() ? 'Fatura atual' : 'Faturas no mês'}
+          cents={data.openCardInvoicesCents > 0 ? data.openCardInvoicesCents : data.monthCardInvoicesCents}
           tone={data.openCardInvoicesCents > 0 ? 'negative' : 'accent'}
           hint={
             data.monthCardInvoicesCents === 0
               ? 'Sem gastos em cartão'
               : data.openCardInvoicesCents > 0
-                ? `Em aberto: ${formatMoney(data.openCardInvoicesCents)}`
+                ? data.openCardInvoicesCents < data.monthCardInvoicesCents
+                  ? `Em aberto · total ${formatMoney(data.monthCardInvoicesCents)}`
+                  : 'Em aberto'
                 : 'Todas as faturas pagas'
           }
         />
