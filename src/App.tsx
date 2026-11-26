@@ -1,7 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
+import AppBackground from './components/app/AppBackground'
 import AppShell, { type AppView } from './components/app/AppShell'
 import { AUTH_EXPIRED_EVENT } from './services/apiClient'
-import { clearStoredToken, getStoredToken } from './services/authService'
+import {
+  clearAccessToken,
+  logout,
+  refreshSession,
+  subscribeAuthBroadcast,
+} from './services/authService'
 import CardsPage from './pages/CardsPage'
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
@@ -9,27 +15,71 @@ import OpenFinancePage from './pages/OpenFinancePage'
 import RegistryPage from './pages/RegistryPage'
 import TransactionsPage from './pages/TransactionsPage'
 
-// Sem roteador: a tela atual fica no estado. Sem token (ou com sessão expirada), mostra o login.
+type AuthState = 'checking' | 'authenticated' | 'unauthenticated'
+
+// Sem roteador: a tela atual fica no estado. Na abertura, tenta restaurar a sessão pelo cookie HttpOnly.
 function App() {
-  const [authenticated, setAuthenticated] = useState(() => getStoredToken() !== null)
+  const [authState, setAuthState] = useState<AuthState>('checking')
   const [view, setView] = useState<AppView>('home')
 
-  const handleAuthenticated = useCallback(() => setAuthenticated(true), [])
+  const handleAuthenticated = useCallback(() => setAuthState('authenticated'), [])
 
   useEffect(() => {
-    const handleExpired = () => setAuthenticated(false)
-    window.addEventListener(AUTH_EXPIRED_EVENT, handleExpired)
-    return () => window.removeEventListener(AUTH_EXPIRED_EVENT, handleExpired)
+    let active = true
+
+    refreshSession().then((session) => {
+      if (!active) return
+      setAuthState(session ? 'authenticated' : 'unauthenticated')
+    })
+
+    return () => {
+      active = false
+    }
   }, [])
 
-  if (!authenticated) {
+  useEffect(() => {
+    const handleExpired = () => {
+      clearAccessToken()
+      setView('home')
+      setAuthState('unauthenticated')
+    }
+
+    window.addEventListener(AUTH_EXPIRED_EVENT, handleExpired)
+    const unsubscribeBroadcast = subscribeAuthBroadcast((type) => {
+      if (type === 'logout') {
+        handleExpired()
+      } else if (type === 'login') {
+        refreshSession().then((session) => {
+          if (session) setAuthState('authenticated')
+        })
+      }
+    })
+
+    return () => {
+      window.removeEventListener(AUTH_EXPIRED_EVENT, handleExpired)
+      unsubscribeBroadcast()
+    }
+  }, [])
+
+  if (authState === 'checking') {
+    return (
+      <div className="app" style={{ display: 'grid', placeItems: 'center', minHeight: '100vh' }}>
+        <AppBackground />
+        <p className="page-subtitle" style={{ position: 'relative', zIndex: 1 }}>
+          Verificando sessão…
+        </p>
+      </div>
+    )
+  }
+
+  if (authState === 'unauthenticated') {
     return <LoginPage onAuthenticated={handleAuthenticated} />
   }
 
-  function handleLogout() {
-    clearStoredToken()
+  async function handleLogout() {
+    await logout()
     setView('home')
-    setAuthenticated(false)
+    setAuthState('unauthenticated')
   }
 
   return (

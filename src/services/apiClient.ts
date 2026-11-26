@@ -1,6 +1,12 @@
-import { clearStoredToken, getStoredToken } from './authService'
+import {
+  clearAccessToken,
+  getAccessToken,
+  notifyAuthBroadcast,
+  refreshSession,
+  type ActiveSession,
+} from './authService'
 
-// Disparado quando a API responde 401 (token ausente, inválido ou expirado).
+// Disparado quando a sessão expirou e não foi possível renovar via refresh token.
 // O App escuta este evento e volta para a tela de login.
 export const AUTH_EXPIRED_EVENT = 'personalcontrol:auth-expired'
 
@@ -20,31 +26,46 @@ type RequestOptions = {
   signal?: AbortSignal
 }
 
-// Chamada à API com o token JWT anexado. Respostas 204 devolvem undefined.
-export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
+function buildFetchInit(options: RequestOptions, token: string | null): RequestInit {
   const headers: Record<string, string> = {}
-  const token = getStoredToken()
   // FormData (upload de arquivos) vai como multipart; o navegador define o Content-Type com o boundary.
   const isForm = options.body instanceof FormData
 
   if (token) headers.Authorization = `Bearer ${token}`
   if (options.body !== undefined && !isForm) headers['Content-Type'] = 'application/json'
 
-  let response: Response
+  return {
+    method: options.method ?? 'GET',
+    headers,
+    body: options.body === undefined ? undefined : isForm ? (options.body as FormData) : JSON.stringify(options.body),
+    credentials: 'same-origin',
+    signal: options.signal,
+  }
+}
+
+async function sendFetch(path: string, options: RequestOptions, token: string | null): Promise<Response> {
   try {
-    response = await fetch(path, {
-      method: options.method ?? 'GET',
-      headers,
-      body: options.body === undefined ? undefined : isForm ? (options.body as FormData) : JSON.stringify(options.body),
-      signal: options.signal,
-    })
+    return await fetch(path, buildFetchInit(options, token))
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') throw error
     throw new ApiError(0, 'Não foi possível conectar ao servidor.')
   }
+}
+
+// Chamada à API com o token JWT anexado e renovação silenciosa automática em caso de 401.
+// Respostas 204 devolvem undefined.
+export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  let response = await sendFetch(path, options, getAccessToken())
 
   if (response.status === 401) {
-    clearStoredToken()
+    const refreshed = await refreshSession()
+    if (refreshed) {
+      response = await sendFetch(path, options, refreshed.accessToken)
+    }
+  }
+
+  if (response.status === 401) {
+    clearAccessToken()
     window.dispatchEvent(new Event(AUTH_EXPIRED_EVENT))
     throw new ApiError(401, 'Sua sessão expirou. Entre novamente.')
   }
@@ -59,4 +80,19 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   }
 
   return data as T
+}
+
+export const sessionApi = {
+  list: (signal?: AbortSignal) => apiRequest<ActiveSession[]>('/auth/sessions', { signal }),
+  revoke: (id: string) => apiRequest<void>(`/auth/sessions/${id}`, { method: 'DELETE' }),
+  logoutAll: async (keepCurrent: boolean) => {
+    await apiRequest<void>(`/auth/logout-all?keepCurrent=${keepCurrent ? 'true' : 'false'}`, {
+      method: 'POST',
+    })
+    if (!keepCurrent) {
+      clearAccessToken()
+      notifyAuthBroadcast('logout')
+      window.dispatchEvent(new Event(AUTH_EXPIRED_EVENT))
+    }
+  },
 }

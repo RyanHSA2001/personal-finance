@@ -1,5 +1,6 @@
 // Comunicação com a API de autenticação (PersonalControl.Api).
-// Não depende do React: pode ser usada de qualquer lugar do front.
+// O access token fica somente em memória (nunca em localStorage/sessionStorage);
+// a persistência da sessão é feita pelo cookie HttpOnly gerenciado pelo servidor.
 
 export type LoginCredentials = {
   email: string
@@ -15,10 +16,21 @@ export type RegisterData = {
 export type AuthSession = {
   accessToken: string
   expiresAtUtc: string
+  sessionId: string
+}
+
+export type ActiveSession = {
+  id: string
+  userAgent: string
+  ipAddress: string
+  createdAtUtc: string
+  lastUsedAtUtc: string
+  expiresAtUtc: string
+  isCurrent: boolean
 }
 
 // 'invalid-credentials': e-mail ou senha incorretos (401).
-// 'rejected': dados recusados pela API, com mensagem própria (400 ou 403).
+// 'rejected': dados recusados pela API, com mensagem própria (400, 403, 409 ou 429).
 // 'unavailable': API fora do ar ou erro inesperado.
 export type AuthFailureReason = 'invalid-credentials' | 'rejected' | 'unavailable'
 
@@ -26,21 +38,115 @@ export type AuthResult =
   | { ok: true; session: AuthSession }
   | { ok: false; reason: AuthFailureReason; message?: string }
 
-const TOKEN_KEY = 'personalcontrol.token'
+const LEGACY_TOKEN_KEY = 'personalcontrol.token'
+const AUTH_CHANNEL_NAME = 'personalcontrol-auth'
+
+let accessToken: string | null = null
+let refreshInFlight: Promise<AuthSession | null> | null = null
+
+function clearLegacyStorage(): void {
+  try {
+    sessionStorage.removeItem(LEGACY_TOKEN_KEY)
+  } catch {
+    // Ignora se o armazenamento estiver indisponível.
+  }
+}
+
+clearLegacyStorage()
+
+export function getAccessToken(): string | null {
+  return accessToken
+}
+
+export function setAccessToken(token: string | null): void {
+  accessToken = token
+}
+
+export function clearAccessToken(): void {
+  accessToken = null
+  clearLegacyStorage()
+}
+
+export function notifyAuthBroadcast(type: 'logout' | 'login'): void {
+  if (typeof BroadcastChannel === 'undefined') return
+  try {
+    const channel = new BroadcastChannel(AUTH_CHANNEL_NAME)
+    channel.postMessage({ type })
+    channel.close()
+  } catch {
+    // Ignora se BroadcastChannel não estiver disponível.
+  }
+}
+
+export function subscribeAuthBroadcast(onMessage: (type: 'logout' | 'login') => void): () => void {
+  if (typeof BroadcastChannel === 'undefined') return () => {}
+  try {
+    const channel = new BroadcastChannel(AUTH_CHANNEL_NAME)
+    channel.onmessage = (event: MessageEvent<{ type?: 'logout' | 'login' }>) => {
+      if (event.data?.type === 'logout' || event.data?.type === 'login') {
+        onMessage(event.data.type)
+      }
+    }
+    return () => channel.close()
+  } catch {
+    return () => {}
+  }
+}
 
 export function login(credentials: LoginCredentials, signal?: AbortSignal): Promise<AuthResult> {
   return postAuth('/auth/login', credentials, signal)
 }
 
-// Cadastro do primeiro acesso. Já devolve a sessão, então o usuário entra logo em seguida.
 export function register(data: RegisterData, signal?: AbortSignal): Promise<AuthResult> {
   return postAuth('/auth/register', data, signal)
 }
 
-// Indica se ainda não há usuários cadastrados. Retorna null se a API não responder.
+// Renova o access token usando o cookie HttpOnly. Compartilha uma única chamada em voo
+// para que várias requisições 401 simultâneas não acionem rotação duplicada.
+export function refreshSession(): Promise<AuthSession | null> {
+  if (refreshInFlight) return refreshInFlight
+
+  refreshInFlight = (async () => {
+    try {
+      const response = await fetch('/auth/refresh', {
+        method: 'POST',
+        credentials: 'same-origin',
+      })
+
+      if (!response.ok) {
+        clearAccessToken()
+        return null
+      }
+
+      const session = (await response.json()) as AuthSession
+      setAccessToken(session.accessToken)
+      return session
+    } catch {
+      return null
+    } finally {
+      refreshInFlight = null
+    }
+  })()
+
+  return refreshInFlight
+}
+
+export async function logout(): Promise<void> {
+  clearAccessToken()
+  notifyAuthBroadcast('logout')
+  try {
+    await fetch('/auth/logout', {
+      method: 'POST',
+      credentials: 'same-origin',
+    })
+  } catch {
+    // Mesmo offline, o estado local já foi limpo.
+  }
+}
+
 export async function fetchRequiresSetup(signal?: AbortSignal): Promise<boolean | null> {
   try {
-    const response = await fetch('/auth/setup', { signal })
+    const response = await fetch('/auth/setup', { signal, credentials: 'same-origin' })
     if (!response.ok) return null
 
     const data = (await response.json()) as { requiresSetup: boolean }
@@ -56,12 +162,14 @@ async function postAuth(path: string, body: unknown, signal?: AbortSignal): Prom
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
+      credentials: 'same-origin',
       signal,
     })
 
     if (response.ok) {
       const session = (await response.json()) as AuthSession
-      storeToken(session.accessToken)
+      setAccessToken(session.accessToken)
+      notifyAuthBroadcast('login')
       return { ok: true, session }
     }
 
@@ -69,7 +177,7 @@ async function postAuth(path: string, body: unknown, signal?: AbortSignal): Prom
       return { ok: false, reason: 'invalid-credentials' }
     }
 
-    if (response.status === 400 || response.status === 403 || response.status === 409) {
+    if (response.status === 400 || response.status === 403 || response.status === 409 || response.status === 429) {
       return { ok: false, reason: 'rejected', message: await readErrorMessage(response) }
     }
 
@@ -85,29 +193,5 @@ async function readErrorMessage(response: Response): Promise<string | undefined>
     return data.error
   } catch {
     return undefined
-  }
-}
-
-export function storeToken(token: string): void {
-  try {
-    sessionStorage.setItem(TOKEN_KEY, token)
-  } catch {
-    // Armazenamento indisponível (ex.: modo privado restrito). O login segue válido na sessão atual.
-  }
-}
-
-export function getStoredToken(): string | null {
-  try {
-    return sessionStorage.getItem(TOKEN_KEY)
-  } catch {
-    return null
-  }
-}
-
-export function clearStoredToken(): void {
-  try {
-    sessionStorage.removeItem(TOKEN_KEY)
-  } catch {
-    // Nada a fazer: sem armazenamento, não há token salvo.
   }
 }

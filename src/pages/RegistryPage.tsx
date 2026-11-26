@@ -1,6 +1,7 @@
 import { useCallback, useState, type FormEvent, type ReactNode } from 'react'
 import Select, { type SelectOption } from '../components/ui/Select'
-import { ApiError } from '../services/apiClient'
+import { ApiError, AUTH_EXPIRED_EVENT, sessionApi } from '../services/apiClient'
+import { clearAccessToken, notifyAuthBroadcast, type ActiveSession } from '../services/authService'
 import { formatMoney, parseMoneyInput, parseSignedMoneyInput, currentMonth } from '../lib/format'
 import { useRequest } from '../hooks/useRequest'
 import {
@@ -10,7 +11,7 @@ import {
   type CategoryKind,
 } from '../services/financeService'
 
-// Cadastros: contas, categorias e orçamentos. Base para os lançamentos e os gráficos.
+// Cadastros: contas, categorias, orçamentos e controle de sessões ativas.
 function RegistryPage() {
   const [categoriesVersion, setCategoriesVersion] = useState(0)
   const notifyCategoriesChanged = useCallback(() => setCategoriesVersion((version) => version + 1), [])
@@ -20,7 +21,7 @@ function RegistryPage() {
       <div className="page-header">
         <div>
           <h1 className="page-title">Cadastros</h1>
-          <p className="page-subtitle">Organize suas contas, categorias e limites de gasto.</p>
+          <p className="page-subtitle">Organize suas contas, categorias, limites de gasto e sessões ativas.</p>
         </div>
       </div>
 
@@ -30,6 +31,7 @@ function RegistryPage() {
       </div>
 
       <BudgetsPanel categoriesVersion={categoriesVersion} />
+      <SessionsPanel />
     </div>
   )
 }
@@ -353,6 +355,157 @@ function BudgetsPanel({ categoriesVersion }: { categoriesVersion: number }) {
               onClick={() => handleDelete(budget.id)}
             >
               ×
+            </button>
+          </li>
+        ))}
+      </ul>
+    </Panel>
+  )
+}
+
+// ---------- Sessões ativas ----------
+
+function describeDevice(userAgent: string): string {
+  if (!userAgent) return 'Dispositivo desconhecido'
+
+  const browser =
+    /Edg\//i.test(userAgent) ? 'Edge'
+      : /OPR\//i.test(userAgent) ? 'Opera'
+        : /Chrome\//i.test(userAgent) ? 'Chrome'
+          : /Firefox\//i.test(userAgent) ? 'Firefox'
+            : /Safari\//i.test(userAgent) ? 'Safari'
+              : 'Navegador'
+
+  const os =
+    /Windows/i.test(userAgent) ? 'Windows'
+      : /Android/i.test(userAgent) ? 'Android'
+        : /iPhone|iPad|iPod/i.test(userAgent) ? 'iOS'
+          : /Mac OS X/i.test(userAgent) ? 'macOS'
+            : /Linux/i.test(userAgent) ? 'Linux'
+              : 'Outro sistema'
+
+  return `${browser} · ${os}`
+}
+
+function formatDateTime(isoUtc: string): string {
+  const date = new Date(isoUtc)
+  if (Number.isNaN(date.getTime())) return isoUtc
+  return date.toLocaleString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+function SessionsPanel() {
+  const load = useCallback((signal: AbortSignal) => sessionApi.list(signal), [])
+  const { data, error, reload } = useRequest('sessions', load)
+  const [actionError, setActionError] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  const otherSessionsCount = data?.filter((session) => !session.isCurrent).length ?? 0
+
+  async function handleRevoke(session: ActiveSession) {
+    if (session.isCurrent) {
+      const confirmed = window.confirm('Encerrar esta sessão atual? Você será desconectado.')
+      if (!confirmed) return
+    }
+
+    setActionError('')
+    setBusy(true)
+    try {
+      await sessionApi.revoke(session.id)
+      if (session.isCurrent) {
+        clearAccessToken()
+        notifyAuthBroadcast('logout')
+        window.dispatchEvent(new Event(AUTH_EXPIRED_EVENT))
+      } else {
+        reload()
+      }
+    } catch (caught) {
+      setActionError(errorMessage(caught, 'Não foi possível encerrar a sessão.'))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function handleLogoutOthers() {
+    const confirmed = window.confirm('Encerrar todas as outras sessões ativas em outros dispositivos?')
+    if (!confirmed) return
+
+    setActionError('')
+    setBusy(true)
+    try {
+      await sessionApi.logoutAll(true)
+      reload()
+    } catch (caught) {
+      setActionError(errorMessage(caught, 'Não foi possível encerrar as outras sessões.'))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function handleLogoutAll() {
+    const confirmed = window.confirm('Sair de todos os dispositivos, incluindo este agora?')
+    if (!confirmed) return
+
+    setActionError('')
+    setBusy(true)
+    try {
+      await sessionApi.logoutAll(false)
+    } catch (caught) {
+      setActionError(errorMessage(caught, 'Não foi possível encerrar todas as sessões.'))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <Panel title="Sessões ativas">
+      <p className="page-subtitle">
+        Dispositivos conectados à sua conta. Você pode encerrar sessões remotamente a qualquer momento.
+      </p>
+
+      <div className="form-actions" style={{ marginTop: 16, gap: 10, flexWrap: 'wrap' }}>
+        {otherSessionsCount > 0 && (
+          <button type="button" className="btn btn-ghost" disabled={busy} onClick={handleLogoutOthers}>
+            Encerrar outras sessões ({otherSessionsCount})
+          </button>
+        )}
+        <button type="button" className="btn btn-danger" disabled={busy} onClick={handleLogoutAll}>
+          Sair de todos os dispositivos
+        </button>
+      </div>
+
+      {(actionError || (error && !data)) && (
+        <p className="form-error" role="alert" style={{ marginTop: 12 }}>
+          {actionError || error}
+        </p>
+      )}
+
+      <ul className="list" style={{ marginTop: 20 }}>
+        {data?.length === 0 && <p className="empty">Nenhuma sessão ativa encontrada.</p>}
+        {data?.map((session) => (
+          <li key={session.id} className="list-item">
+            <div className="list-item-main">
+              <span className="list-item-title">
+                {describeDevice(session.userAgent)}
+                {session.isCurrent ? ' (Sessão atual)' : ''}
+              </span>
+              <span className="list-item-meta">
+                {session.ipAddress ? `IP ${session.ipAddress} · ` : ''}
+                Último uso: {formatDateTime(session.lastUsedAtUtc)} · Criada em: {formatDateTime(session.createdAtUtc)}
+              </span>
+            </div>
+            <button
+              type="button"
+              className="btn btn-ghost"
+              disabled={busy}
+              onClick={() => handleRevoke(session)}
+            >
+              Encerrar
             </button>
           </li>
         ))}
