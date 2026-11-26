@@ -1,4 +1,4 @@
-import { formatDate, formatMoney } from '../../lib/format'
+import { formatDate, formatMoney, todayIso } from '../../lib/format'
 import { TRANSACTION_TYPE_LABELS, type Transaction } from '../../services/financeService'
 import './finance.css'
 
@@ -11,6 +11,7 @@ type TransactionRowProps = {
 function TransactionRow({ transaction, onDelete }: TransactionRowProps) {
   const { type, amountCents } = transaction
   const isTransfer = type === 'transfer'
+  const isScheduled = transaction.occurredOn > todayIso()
   const sign = type === 'income' ? '+' : type === 'expense' ? '−' : ''
   const dotColor = isTransfer ? 'var(--color-info)' : (transaction.categoryColor ?? '#94a3b8')
   const title = transaction.description || transaction.categoryName || TRANSACTION_TYPE_LABELS[type]
@@ -23,6 +24,7 @@ function TransactionRow({ transaction, onDelete }: TransactionRowProps) {
         <span className="transaction-title">{title}</span>
         <span className="transaction-meta">
           <span>{formatDate(transaction.occurredOn)}</span>
+          {isScheduled && <span className="chip tone-accent">Agendado</span>}
           <span>·</span>
           <span>
             {isTransfer

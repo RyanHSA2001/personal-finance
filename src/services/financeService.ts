@@ -28,6 +28,7 @@ export type Account = {
   kind: AccountKind
   initialBalanceCents: number
   balanceCents: number
+  projectedBalanceCents: number
 }
 
 export type Category = {
@@ -77,6 +78,7 @@ export type MonthTrend = {
 export type Dashboard = {
   month: string
   totalBalanceCents: number
+  projectedBalanceCents: number
   monthIncomeCents: number
   monthExpenseCents: number
   monthNetCents: number

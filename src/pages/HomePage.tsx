@@ -67,7 +67,16 @@ function HomePage({ onNavigate }: HomePageProps) {
       )}
 
       <div className="grid grid-kpi">
-        <Kpi label="Saldo total" cents={data.totalBalanceCents} tone="accent" hint={`${data.accounts.length} conta(s)`} />
+        <Kpi
+          label={data.projectedBalanceCents !== data.totalBalanceCents ? 'Saldo disponível' : 'Saldo total'}
+          cents={data.projectedBalanceCents}
+          tone={data.projectedBalanceCents < 0 ? 'negative' : 'accent'}
+          hint={
+            data.projectedBalanceCents !== data.totalBalanceCents
+              ? `Em conta hoje: ${formatMoney(data.totalBalanceCents)}`
+              : `${data.accounts.length} conta(s)`
+          }
+        />
         <Kpi label="Receitas no mês" cents={data.monthIncomeCents} tone="positive" />
         <Kpi label="Despesas no mês" cents={data.monthExpenseCents} tone="negative" />
         <Kpi
@@ -118,7 +127,12 @@ function HomePage({ onNavigate }: HomePageProps) {
                 <li key={account.id} className="list-item">
                   <div className="list-item-main">
                     <span className="list-item-title">{account.name}</span>
-                    <span className="list-item-meta">{ACCOUNT_KIND_LABELS[account.kind]}</span>
+                    <span className="list-item-meta">
+                      {ACCOUNT_KIND_LABELS[account.kind]}
+                      {account.projectedBalanceCents !== account.balanceCents
+                        ? ` · Previsto: ${formatMoney(account.projectedBalanceCents)}`
+                        : ''}
+                    </span>
                   </div>
                   <span className={`list-item-amount ${account.balanceCents < 0 ? 'tone-negative' : ''}`}>
                     {formatMoney(account.balanceCents)}
