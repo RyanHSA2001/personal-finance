@@ -168,12 +168,13 @@ export const cardsApi = {
 }
 
 // Calcula o mês da fatura (AAAA-MM) a partir da data da compra e do dia de fechamento.
+// Compras a partir do dia de fechamento (virada do dia) já entram na fatura do mês seguinte.
 export function computeBillingMonth(occurredOnIso: string, closingDay: number): string {
   const [year, month, day] = occurredOnIso.split('-').map(Number)
   if (!year || !month || !day) return occurredOnIso.slice(0, 7)
 
   const daysInMonth = new Date(year, month, 0).getDate()
   const effectiveClosing = Math.min(closingDay, daysInMonth)
-  const target = day <= effectiveClosing ? new Date(year, month - 1, 1) : new Date(year, month, 1)
+  const target = day < effectiveClosing ? new Date(year, month - 1, 1) : new Date(year, month, 1)
   return `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, '0')}`
 }
