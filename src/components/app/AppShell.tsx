@@ -2,6 +2,7 @@ import { useRef, type ReactNode } from 'react'
 import { useCardLight } from '../../hooks/useCardLight'
 import '../../styles/app.css'
 import AppBackground from './AppBackground'
+import QuickAddModal from './QuickAddModal'
 
 export type AppView = 'home' | 'transactions' | 'goals' | 'cards' | 'open-finance' | 'registry' | 'admin'
 
@@ -62,21 +63,6 @@ const NAV_ITEMS: NavItem[] = [
     ),
   },
   {
-    view: 'open-finance',
-    label: 'Open Finance',
-    mobileLabel: 'Bancos',
-    icon: (
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M3.5 9.5 12 4.5l8.5 5" />
-        <path d="M5.5 10v8" />
-        <path d="M10 10v8" />
-        <path d="M14 10v8" />
-        <path d="M18.5 10v8" />
-        <path d="M3.5 18.5h17" />
-      </svg>
-    ),
-  },
-  {
     view: 'registry',
     label: 'Cadastros',
     mobileLabel: 'Cadastros',
@@ -94,11 +80,12 @@ type AppShellProps = {
   isAdmin: boolean
   onNavigate: (view: AppView) => void
   onLogout: () => void
+  onQuickSaved: () => void
   children: ReactNode
 }
 
 // Moldura do aplicativo logado: fundo animado, cabeçalho desktop, barra inferior no mobile e área de conteúdo.
-function AppShell({ view, isAdmin, onNavigate, onLogout, children }: AppShellProps) {
+function AppShell({ view, isAdmin, onNavigate, onLogout, onQuickSaved, children }: AppShellProps) {
   const rootRef = useRef<HTMLDivElement>(null)
   useCardLight(rootRef)
 
@@ -159,6 +146,8 @@ function AppShell({ view, isAdmin, onNavigate, onLogout, children }: AppShellPro
       </header>
 
       <main className="app-main">{children}</main>
+
+      <QuickAddModal onSaved={onQuickSaved} />
 
       <nav className="app-tabbar" aria-label="Navegação móvel">
         {NAV_ITEMS.map((item) => (

@@ -1,4 +1,5 @@
 import { useCallback, useState, type FormEvent, type ReactNode } from 'react'
+import type { AppView } from '../components/app/AppShell'
 import Select, { type SelectOption } from '../components/ui/Select'
 import { ApiError, AUTH_EXPIRED_EVENT, sessionApi } from '../services/apiClient'
 import { clearAccessToken, notifyAuthBroadcast, type ActiveSession } from '../services/authService'
@@ -11,8 +12,8 @@ import {
   type CategoryKind,
 } from '../services/financeService'
 
-// Cadastros: contas, categorias, orçamentos e controle de sessões ativas.
-function RegistryPage() {
+// Cadastros: contas, categorias, orçamentos, integrações e controle de sessões ativas.
+function RegistryPage({ onNavigate }: { onNavigate: (view: AppView) => void }) {
   const [categoriesVersion, setCategoriesVersion] = useState(0)
   const notifyCategoriesChanged = useCallback(() => setCategoriesVersion((version) => version + 1), [])
 
@@ -31,6 +32,19 @@ function RegistryPage() {
       </div>
 
       <BudgetsPanel categoriesVersion={categoriesVersion} />
+
+      <Panel title="Integração Open Finance (opcional)">
+        <p className="page-subtitle">
+          Prefere controle 100% gratuito? Use o botão <strong>+ Lançar</strong>, contas fixas e importação de extratos
+          OFX/CSV. Se quiser conectar bancos via Pluggy, acesse a configuração dedicada abaixo.
+        </p>
+        <div className="form-actions" style={{ marginTop: 16 }}>
+          <button type="button" className="btn btn-ghost" onClick={() => onNavigate('open-finance')}>
+            Abrir Open Finance (Pluggy)
+          </button>
+        </div>
+      </Panel>
+
       <SessionsPanel />
     </div>
   )

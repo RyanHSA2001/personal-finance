@@ -15,6 +15,7 @@ export default defineConfig({
       '/accounts': API,
       '/categories': API,
       '/transactions': API,
+      '/recurring': API,
       '/budgets': API,
       '/dashboard': API,
       '/cards': API,

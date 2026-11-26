@@ -67,7 +67,7 @@ function OfxImport({ accounts, categories, onImported }: OfxImportProps) {
             transaction.externalId,
             {
               selected: !transaction.alreadyImported,
-              categoryId: previous[transaction.externalId]?.categoryId ?? '',
+              categoryId: previous[transaction.externalId]?.categoryId ?? transaction.suggestedCategoryId ?? '',
             },
           ]),
         ),
@@ -180,7 +180,7 @@ function OfxImport({ accounts, categories, onImported }: OfxImportProps) {
         />
 
         <div className="field">
-          <span>Arquivo OFX</span>
+          <span>Arquivo OFX ou CSV</span>
           <div className="ofx-file">
             <button
               type="button"
@@ -191,7 +191,13 @@ function OfxImport({ accounts, categories, onImported }: OfxImportProps) {
               {file ? 'Trocar arquivo' : 'Escolher arquivo'}
             </button>
             <span className="ofx-file-name">{file?.name ?? 'Nenhum arquivo selecionado'}</span>
-            <input ref={inputRef} type="file" accept=".ofx,application/x-ofx" hidden onChange={handleFileChange} />
+            <input
+              ref={inputRef}
+              type="file"
+              accept=".ofx,.qfx,.csv,application/x-ofx,text/csv"
+              hidden
+              onChange={handleFileChange}
+            />
           </div>
         </div>
       </div>

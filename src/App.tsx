@@ -25,6 +25,9 @@ function App() {
   const [authState, setAuthState] = useState<AuthState>('checking')
   const [isAdmin, setIsAdmin] = useState(false)
   const [view, setView] = useState<AppView>('home')
+  const [dataVersion, setDataVersion] = useState(0)
+
+  const handleQuickSaved = useCallback(() => setDataVersion((v) => v + 1), [])
 
   const handleAuthenticated = useCallback(() => {
     setIsAdmin(getIsAdmin())
@@ -96,13 +99,13 @@ function App() {
   }
 
   return (
-    <AppShell view={view} isAdmin={isAdmin} onNavigate={setView} onLogout={handleLogout}>
-      {view === 'home' && <HomePage onNavigate={setView} />}
-      {view === 'transactions' && <TransactionsPage />}
-      {view === 'goals' && <GoalsPage />}
-      {view === 'cards' && <CardsPage onNavigate={setView} />}
+    <AppShell view={view} isAdmin={isAdmin} onNavigate={setView} onLogout={handleLogout} onQuickSaved={handleQuickSaved}>
+      {view === 'home' && <HomePage key={`home-${dataVersion}`} onNavigate={setView} />}
+      {view === 'transactions' && <TransactionsPage key={`tx-${dataVersion}`} />}
+      {view === 'goals' && <GoalsPage key={`goals-${dataVersion}`} />}
+      {view === 'cards' && <CardsPage key={`cards-${dataVersion}`} onNavigate={setView} />}
       {view === 'open-finance' && <OpenFinancePage onNavigate={setView} />}
-      {view === 'registry' && <RegistryPage />}
+      {view === 'registry' && <RegistryPage onNavigate={setView} />}
       {view === 'admin' && isAdmin && <AdminPage />}
     </AppShell>
   )

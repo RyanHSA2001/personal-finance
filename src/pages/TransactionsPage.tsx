@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 import MonthPicker from '../components/finance/MonthPicker'
 import OfxImport from '../components/finance/OfxImport'
+import RecurringPanel from '../components/finance/RecurringPanel'
 import TransactionForm from '../components/finance/TransactionForm'
 import TransactionRow from '../components/finance/TransactionRow'
 import { currentMonth } from '../lib/format'
@@ -65,8 +66,15 @@ function TransactionsPage() {
             />
           </section>
 
+          <RecurringPanel
+            month={month}
+            accounts={accounts.data ?? []}
+            categories={categories.data ?? []}
+            onApplied={refreshAfterChange}
+          />
+
           <section className="card">
-            <h2 className="card-title">Importar extrato OFX</h2>
+            <h2 className="card-title">Importar extrato (OFX ou CSV)</h2>
             <OfxImport
               accounts={accounts.data ?? []}
               categories={categories.data ?? []}

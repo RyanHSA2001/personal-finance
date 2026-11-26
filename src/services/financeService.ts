@@ -126,6 +126,37 @@ export type OfxPreviewTransaction = {
   occurredOn: string
   ofxType: string
   alreadyImported: boolean
+  suggestedCategoryId?: string | null
+}
+
+// ---------- Lançamentos recorrentes (contas fixas) ----------
+
+export type RecurringItem = {
+  id: string
+  name: string
+  type: 'income' | 'expense'
+  amountCents: number
+  dayOfMonth: number
+  accountId: string
+  accountName: string
+  categoryId: string | null
+  categoryName: string | null
+  categoryColor: string | null
+  appliedInMonth: boolean
+}
+
+export type RecurringInput = {
+  name: string
+  type: 'income' | 'expense'
+  amountCents: number
+  dayOfMonth: number
+  accountId: string
+  categoryId: string | null
+}
+
+export type RecurringApplyResult = {
+  applied: number
+  skipped: number
 }
 
 export type OfxPreview = {
@@ -204,5 +235,17 @@ export const financeApi = {
       apiRequest<Budget[]>(withQuery('/budgets', { month }), { signal }),
     upsert: (input: BudgetInput) => apiRequest<void>('/budgets', { method: 'PUT', body: input }),
     remove: (id: string) => apiRequest<void>(`/budgets/${id}`, { method: 'DELETE' }),
+  },
+
+  recurring: {
+    list: (month: string, signal?: AbortSignal) =>
+      apiRequest<RecurringItem[]>(withQuery('/recurring', { month }), { signal }),
+    create: (input: RecurringInput) =>
+      apiRequest<Created>('/recurring', { method: 'POST', body: input }),
+    remove: (id: string) => apiRequest<void>(`/recurring/${id}`, { method: 'DELETE' }),
+    applyMonth: (month: string) =>
+      apiRequest<RecurringApplyResult>(withQuery('/recurring/apply', { month }), { method: 'POST' }),
+    applyOne: (id: string, month: string) =>
+      apiRequest<RecurringApplyResult>(withQuery(`/recurring/${id}/apply`, { month }), { method: 'POST' }),
   },
 }
