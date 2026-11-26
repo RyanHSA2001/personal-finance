@@ -19,8 +19,19 @@ type Tone = 'accent' | 'positive' | 'negative' | 'warning'
 // Tela inicial: visão geral das contas e do mês, com gráficos de gastos.
 function HomePage({ onNavigate }: HomePageProps) {
   const [month, setMonth] = useState(currentMonth)
+  const [togglingId, setTogglingId] = useState<string | null>(null)
   const load = useCallback((signal: AbortSignal) => financeApi.dashboard(month, signal), [month])
   const { data, error, loading, reload } = useRequest(month, load)
+
+  async function handleToggleAccount(accountId: string, nextValue: boolean) {
+    setTogglingId(accountId)
+    try {
+      await financeApi.accounts.setOverviewVisibility(accountId, nextValue)
+      reload()
+    } finally {
+      setTogglingId(null)
+    }
+  }
 
   if (loading && !data) {
     return <p className="state-message">Carregando seu resumo...</p>
@@ -40,6 +51,7 @@ function HomePage({ onNavigate }: HomePageProps) {
   if (!data) return null
 
   const noAccounts = data.accounts.length === 0
+  const visibleAccountsCount = data.accounts.filter((a) => a.includeInOverview).length
   const netTone: Tone = data.monthNetCents >= 0 ? 'positive' : 'negative'
   const scheduledReservedCents = data.totalBalanceCents - data.projectedBalanceCents
 
@@ -52,6 +64,33 @@ function HomePage({ onNavigate }: HomePageProps) {
         </div>
         <MonthPicker month={month} onChange={setMonth} />
       </div>
+
+      {!noAccounts && (
+        <div className="account-filter-bar" role="group" aria-label="Filtrar contas na visão geral">
+          <span className="account-filter-label">Contas na tela:</span>
+          <div className="account-filter-list">
+            {data.accounts.map((account) => (
+              <label
+                key={account.id}
+                className={`account-filter-chip${account.includeInOverview ? ' is-checked' : ''}`}
+              >
+                <input
+                  type="checkbox"
+                  checked={account.includeInOverview}
+                  disabled={togglingId === account.id}
+                  onChange={(e) => handleToggleAccount(account.id, e.target.checked)}
+                />
+                <span>{account.name}</span>
+              </label>
+            ))}
+          </div>
+          {visibleAccountsCount < data.accounts.length && (
+            <span className="account-filter-count">
+              {visibleAccountsCount} de {data.accounts.length} ativa(s)
+            </span>
+          )}
+        </div>
+      )}
 
       {noAccounts && (
         <section className="card">
@@ -75,7 +114,9 @@ function HomePage({ onNavigate }: HomePageProps) {
           hint={
             data.projectedBalanceCents !== data.totalBalanceCents
               ? `Em conta hoje: ${formatMoney(data.totalBalanceCents)}`
-              : `${data.accounts.length} conta(s)`
+              : visibleAccountsCount < data.accounts.length
+                ? `${visibleAccountsCount} de ${data.accounts.length} conta(s)`
+                : `${data.accounts.length} conta(s)`
           }
         />
         <Kpi label="Receitas no mês" cents={data.monthIncomeCents} tone="positive" />
@@ -154,16 +195,29 @@ function HomePage({ onNavigate }: HomePageProps) {
           ) : (
             <ul className="list">
               {data.accounts.map((account) => (
-                <li key={account.id} className="list-item">
-                  <div className="list-item-main">
-                    <span className="list-item-title">{account.name}</span>
-                    <span className="list-item-meta">
-                      {ACCOUNT_KIND_LABELS[account.kind]}
-                      {account.projectedBalanceCents !== account.balanceCents
-                        ? ` · Previsto: ${formatMoney(account.projectedBalanceCents)}`
-                        : ''}
-                    </span>
-                  </div>
+                <li
+                  key={account.id}
+                  className={`list-item${account.includeInOverview ? '' : ' is-muted'}`}
+                >
+                  <label className="account-row-check">
+                    <input
+                      type="checkbox"
+                      checked={account.includeInOverview}
+                      disabled={togglingId === account.id}
+                      aria-label={`Incluir ${account.name} na visão geral`}
+                      onChange={(e) => handleToggleAccount(account.id, e.target.checked)}
+                    />
+                    <div className="list-item-main">
+                      <span className="list-item-title">{account.name}</span>
+                      <span className="list-item-meta">
+                        {ACCOUNT_KIND_LABELS[account.kind]}
+                        {account.projectedBalanceCents !== account.balanceCents
+                          ? ` · Previsto: ${formatMoney(account.projectedBalanceCents)}`
+                          : ''}
+                        {!account.includeInOverview ? ' · Oculta da visão geral' : ''}
+                      </span>
+                    </div>
+                  </label>
                   <span className={`list-item-amount ${account.balanceCents < 0 ? 'tone-negative' : ''}`}>
                     {formatMoney(account.balanceCents)}
                   </span>

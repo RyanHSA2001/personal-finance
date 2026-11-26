@@ -29,6 +29,7 @@ export type Account = {
   initialBalanceCents: number
   balanceCents: number
   projectedBalanceCents: number
+  includeInOverview: boolean
 }
 
 export type Category = {
@@ -204,6 +205,8 @@ export const financeApi = {
   accounts: {
     list: (signal?: AbortSignal) => apiRequest<Account[]>('/accounts', { signal }),
     create: (input: AccountInput) => apiRequest<Created>('/accounts', { method: 'POST', body: input }),
+    setOverviewVisibility: (id: string, includeInOverview: boolean) =>
+      apiRequest<void>(`/accounts/${id}/overview-visibility`, { method: 'PATCH', body: { includeInOverview } }),
     remove: (id: string) => apiRequest<void>(`/accounts/${id}`, { method: 'DELETE' }),
   },
 
