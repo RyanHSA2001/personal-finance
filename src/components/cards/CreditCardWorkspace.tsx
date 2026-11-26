@@ -256,7 +256,12 @@ function CreditCardWorkspace({
             <div className="invoice-summary-grid">
               <div className="invoice-metric">
                 <span className="invoice-metric-label">Fatura de {monthLabel(inv.billingMonth)}</span>
-                <span className="invoice-metric-value">{formatMoney(inv.totalCents)}</span>
+                <span className="invoice-metric-value">
+                  {formatMoney(inv.status === 'paid' ? inv.totalCents : inv.remainingCents)}
+                </span>
+                {inv.status !== 'paid' && (inv.paidAmountCents ?? 0) > 0 && (
+                  <span className="field-hint">Total original: {formatMoney(inv.totalCents)}</span>
+                )}
               </div>
               <div className="invoice-metric">
                 <span className="invoice-metric-label">Status</span>
