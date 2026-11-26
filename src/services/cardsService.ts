@@ -95,6 +95,14 @@ export type CardTransaction = {
   installmentTotal: number
 }
 
+export type CardInvoicePayment = {
+  id: string
+  amountCents: number
+  paidOn: string
+  accountId: string | null
+  accountName: string | null
+}
+
 export type CardInvoice = {
   cardId: string
   cardName: string
@@ -104,9 +112,11 @@ export type CardInvoice = {
   status: InvoiceStatus
   totalCents: number
   paidAmountCents: number | null
+  remainingCents: number
   paidOn: string | null
   paymentAccountId: string | null
   paymentAccountName: string | null
+  payments: CardInvoicePayment[]
   items: CardTransaction[]
 }
 
@@ -163,6 +173,11 @@ export const cardsApi = {
 
   unpayInvoice: (cardId: string, month: string) =>
     apiRequest<void>(`/cards/${cardId}/invoices/${encodeURIComponent(month)}/payment`, {
+      method: 'DELETE',
+    }),
+
+  removeInvoicePayment: (cardId: string, month: string, paymentId: string) =>
+    apiRequest<void>(`/cards/${cardId}/invoices/${encodeURIComponent(month)}/payments/${paymentId}`, {
       method: 'DELETE',
     }),
 }

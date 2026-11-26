@@ -55,13 +55,14 @@ function CreditCardWorkspace({
   const [txError, setTxError] = useState('')
   const [txSaving, setTxSaving] = useState(false)
 
-  // Pagamento de fatura inline
+  // Pagamento de fatura inline (total ou parcial)
   const bankAccounts = accounts.filter((a) => a.kind !== 'credit_card')
   const [showPayBox, setShowPayBox] = useState(false)
   const [payAccountId, setPayAccountId] = useState(
     card.defaultPaymentAccountId ?? bankAccounts[0]?.id ?? '',
   )
   const [payDate, setPayDate] = useState(todayIso)
+  const [payAmount, setPayAmount] = useState('')
   const [paySaving, setPaySaving] = useState(false)
 
   const expenseCategories = categories.filter((c) => c.kind === 'expense')
@@ -141,13 +142,18 @@ function CreditCardWorkspace({
     if (!payAccountId) return setActionError('Selecione a conta para debitar o pagamento.')
     if (!payDate) return setActionError('Informe a data do pagamento.')
 
+    const parsedPayCents = parseMoneyInput(payAmount)
+    if (parsedPayCents === null) return setActionError('Informe um valor de pagamento maior que zero.')
+
     setPaySaving(true)
     try {
       await cardsApi.payInvoice(card.id, month, {
         accountId: payAccountId,
         paidOn: payDate,
+        amountCents: parsedPayCents,
       })
       setShowPayBox(false)
+      setPayAmount('')
       invoice.reload()
       onDataChanged()
     } catch (caught) {
@@ -157,8 +163,27 @@ function CreditCardWorkspace({
     }
   }
 
+  async function handleDeletePayment(paymentId: string, amountCents: number) {
+    if (
+      !window.confirm(
+        `Estornar o pagamento de ${formatMoney(amountCents)}? O débito correspondente na conta bancária também será removido.`,
+      )
+    ) {
+      return
+    }
+
+    setActionError('')
+    try {
+      await cardsApi.removeInvoicePayment(card.id, month, paymentId)
+      invoice.reload()
+      onDataChanged()
+    } catch (caught) {
+      setActionError(caught instanceof ApiError ? caught.message : 'Não foi possível estornar o pagamento.')
+    }
+  }
+
   async function handleUnpayInvoice() {
-    if (!window.confirm('Estornar o pagamento desta fatura? O débito na conta bancária também será removido.')) {
+    if (!window.confirm('Estornar todos os pagamentos desta fatura? Os débitos na conta bancária também serão removidos.')) {
       return
     }
 
@@ -253,65 +278,114 @@ function CreditCardWorkspace({
               </div>
             </div>
 
-            {inv.status === 'paid' ? (
-              <div className="paid-banner">
-                <span>
-                  Fatura paga em <strong>{inv.paidOn ? formatDate(inv.paidOn) : ''}</strong> no valor de{' '}
-                  <strong>{formatMoney(inv.paidAmountCents ?? inv.totalCents)}</strong>
-                  {inv.paymentAccountName ? ` via ${inv.paymentAccountName}` : ''}.
-                </span>
-                <button type="button" className="btn btn-ghost" onClick={handleUnpayInvoice}>
-                  Estornar pagamento
-                </button>
-              </div>
-            ) : (
-              inv.totalCents > 0 && (
-                <div>
-                  {!showPayBox ? (
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      onClick={() => setShowPayBox(true)}
-                      disabled={bankAccounts.length === 0}
-                    >
-                      Pagar fatura ({formatMoney(inv.totalCents)})
+            {inv.payments.length > 0 && (
+              <div className="paid-banner" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 10 }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                  <span>
+                    {inv.status === 'paid' ? (
+                      <>
+                        Fatura quitada — total pago:{' '}
+                        <strong>{formatMoney(inv.paidAmountCents ?? inv.totalCents)}</strong>.
+                      </>
+                    ) : (
+                      <>
+                        Pago parcialmente: <strong>{formatMoney(inv.paidAmountCents ?? 0)}</strong> · Restante:{' '}
+                        <strong>{formatMoney(inv.remainingCents)}</strong>
+                      </>
+                    )}
+                  </span>
+                  {inv.payments.length > 1 && (
+                    <button type="button" className="btn btn-ghost" onClick={handleUnpayInvoice}>
+                      Estornar todos
                     </button>
-                  ) : (
-                    <form className="form pay-box" onSubmit={handlePayInvoice} noValidate>
-                      <div className="form-row">
-                        <Select
-                          label="Conta de pagamento"
-                          value={payAccountId}
-                          options={payAccountOptions}
-                          placeholder="Sem contas disponíveis"
-                          onChange={setPayAccountId}
-                        />
-                        <label className="field">
-                          <span>Data do pagamento</span>
-                          <input type="date" value={payDate} onChange={(e) => setPayDate(e.target.value)} />
-                        </label>
-                      </div>
-                      <span className="field-hint">
-                        O valor de {formatMoney(inv.totalCents)} será debitado da conta escolhida e o limite será liberado
-                        sem duplicar suas despesas nos gráficos.
-                      </span>
-                      <div className="form-actions" style={{ gap: 8 }}>
-                        <button type="submit" className="btn btn-primary" disabled={paySaving}>
-                          {paySaving ? 'Pagando...' : 'Confirmar pagamento'}
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-ghost"
-                          onClick={() => setShowPayBox(false)}
-                          disabled={paySaving}
-                        >
-                          Cancelar
-                        </button>
-                      </div>
-                    </form>
                   )}
                 </div>
-              )
+
+                <ul className="list" style={{ margin: 0 }}>
+                  {inv.payments.map((p) => (
+                    <li key={p.id} className="list-item" style={{ padding: '8px 0' }}>
+                      <div className="list-item-main">
+                        <span className="list-item-title">{formatMoney(p.amountCents)}</span>
+                        <span className="list-item-meta">
+                          Pago em {formatDate(p.paidOn)}
+                          {p.accountName ? ` · via ${p.accountName}` : ''}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        className="btn btn-ghost"
+                        style={{ minHeight: 32, padding: '0 10px', fontSize: 12 }}
+                        onClick={() => handleDeletePayment(p.id, p.amountCents)}
+                      >
+                        Estornar
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {inv.remainingCents > 0 && (
+              <div>
+                {!showPayBox ? (
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={() => {
+                      setPayAmount((inv.remainingCents / 100).toFixed(2).replace('.', ','))
+                      setShowPayBox(true)
+                    }}
+                    disabled={bankAccounts.length === 0}
+                  >
+                    {inv.payments.length > 0
+                      ? `Pagar restante (${formatMoney(inv.remainingCents)})`
+                      : `Pagar fatura (${formatMoney(inv.remainingCents)})`}
+                  </button>
+                ) : (
+                  <form className="form pay-box" onSubmit={handlePayInvoice} noValidate>
+                    <div className="form-row">
+                      <label className="field">
+                        <span>Valor a pagar (total ou parcial)</span>
+                        <input
+                          inputMode="decimal"
+                          placeholder="0,00"
+                          value={payAmount}
+                          onChange={(e) => setPayAmount(e.target.value)}
+                        />
+                      </label>
+                      <Select
+                        label="Conta de pagamento"
+                        value={payAccountId}
+                        options={payAccountOptions}
+                        placeholder="Sem contas disponíveis"
+                        onChange={setPayAccountId}
+                      />
+                      <label className="field">
+                        <span>Data do pagamento</span>
+                        <input type="date" value={payDate} onChange={(e) => setPayDate(e.target.value)} />
+                      </label>
+                    </div>
+                    <span className="field-hint">
+                      Restante da fatura: <strong>{formatMoney(inv.remainingCents)}</strong>. Você pode informar um valor
+                      menor para pagamento parcial — o limite correspondente será liberado imediatamente sem duplicar
+                      despesas nos gráficos.
+                    </span>
+                    <div className="form-actions" style={{ gap: 8 }}>
+                      <button type="submit" className="btn btn-primary" disabled={paySaving}>
+                        {paySaving ? 'Pagando...' : 'Confirmar pagamento'}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-ghost"
+                        onClick={() => setShowPayBox(false)}
+                        disabled={paySaving}
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </form>
+                )}
+              </div>
             )}
           </div>
         )}
