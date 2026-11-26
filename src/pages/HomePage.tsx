@@ -1,4 +1,4 @@
-import { useCallback, useState, type CSSProperties } from 'react'
+import { useCallback, useState, type CSSProperties, type ReactNode } from 'react'
 import BudgetProgress from '../components/finance/BudgetProgress'
 import ExpenseDonutChart from '../components/finance/ExpenseDonutChart'
 import MonthlyTrendChart from '../components/finance/MonthlyTrendChart'
@@ -14,7 +14,7 @@ type HomePageProps = {
   onNavigate: (view: AppView) => void
 }
 
-type Tone = 'accent' | 'positive' | 'negative'
+type Tone = 'accent' | 'positive' | 'negative' | 'warning'
 
 // Tela inicial: visão geral das contas e do mês, com gráficos de gastos.
 function HomePage({ onNavigate }: HomePageProps) {
@@ -41,6 +41,7 @@ function HomePage({ onNavigate }: HomePageProps) {
 
   const noAccounts = data.accounts.length === 0
   const netTone: Tone = data.monthNetCents >= 0 ? 'positive' : 'negative'
+  const scheduledReservedCents = data.totalBalanceCents - data.projectedBalanceCents
 
   return (
     <div className="stack">
@@ -97,6 +98,24 @@ function HomePage({ onNavigate }: HomePageProps) {
                   ? `Em aberto · total ${formatMoney(data.monthCardInvoicesCents)}`
                   : 'Em aberto'
                 : 'Todas as faturas pagas'
+          }
+        />
+        <Kpi
+          label="Saldo agendado"
+          cents={Math.abs(scheduledReservedCents)}
+          tone={scheduledReservedCents > 0 ? 'warning' : scheduledReservedCents < 0 ? 'positive' : 'accent'}
+          icon={
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 7v5l3 2" />
+            </svg>
+          }
+          hint={
+            scheduledReservedCents > 0
+              ? 'Comprometido · ainda em conta hoje'
+              : scheduledReservedCents < 0
+                ? 'A receber em lançamentos futuros'
+                : 'Nenhum lançamento agendado'
           }
         />
       </div>
@@ -170,22 +189,27 @@ type KpiProps = {
   cents: number
   tone: Tone
   hint?: string
+  icon?: ReactNode
 }
 
 const TONE_COLORS: Record<Tone, string> = {
   accent: '#a78bfa',
   positive: '#34d399',
   negative: '#f87171',
+  warning: '#fbbf24',
 }
 
 // Indicador com valor que conta até o número final.
-function Kpi({ label, cents, tone, hint }: KpiProps) {
+function Kpi({ label, cents, tone, hint, icon }: KpiProps) {
   const animated = useCountUp(cents)
 
   return (
     <div className="card kpi" style={{ '--tone': TONE_COLORS[tone] } as CSSProperties}>
       <span className="kpi-accent" aria-hidden="true" />
-      <span className="kpi-label">{label}</span>
+      <span className="kpi-label">
+        {icon}
+        {label}
+      </span>
       <span className={`kpi-value tone-${tone}`}>{formatMoney(animated)}</span>
       {hint && <span className="kpi-hint">{hint}</span>}
     </div>

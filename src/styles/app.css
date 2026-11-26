@@ -352,13 +352,32 @@
 
 .tone-positive { color: var(--color-positive); }
 .tone-negative { color: var(--color-negative); }
+.tone-warning { color: var(--color-warning); }
 .tone-accent { color: var(--color-accent); }
 
 .tone-accent,
 .tone-positive,
-.tone-negative {
+.tone-negative,
+.tone-warning {
   text-shadow: 0 0 28px currentColor;
   text-shadow: 0 0 28px color-mix(in srgb, currentColor 45%, transparent);
+}
+
+.kpi-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.kpi-label svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 /* ---------- Seletor de mês ---------- */
