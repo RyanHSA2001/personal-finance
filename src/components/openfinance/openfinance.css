@@ -99,3 +99,15 @@
   border-radius: 14px;
   background: rgba(12, 11, 20, 0.55);
 }
+
+@media (max-width: 640px) {
+  .of-item-head,
+  .of-link-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .of-item-head .workspace-actions {
+    width: 100%;
+  }
+}
