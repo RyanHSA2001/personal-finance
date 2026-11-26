@@ -3,7 +3,7 @@ import { useCardLight } from '../../hooks/useCardLight'
 import '../../styles/app.css'
 import AppBackground from './AppBackground'
 
-export type AppView = 'home' | 'transactions' | 'cards' | 'open-finance' | 'registry' | 'admin'
+export type AppView = 'home' | 'transactions' | 'goals' | 'cards' | 'open-finance' | 'registry' | 'admin'
 
 type NavItem = {
   view: AppView
@@ -34,6 +34,18 @@ const NAV_ITEMS: NavItem[] = [
         <path d="m14 4 4 3-4 3" />
         <path d="M17 17H6" />
         <path d="m10 14-4 3 4 3" />
+      </svg>
+    ),
+  },
+  {
+    view: 'goals',
+    label: 'Metas',
+    mobileLabel: 'Metas',
+    icon: (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="8" />
+        <circle cx="12" cy="12" r="4.5" />
+        <circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none" />
       </svg>
     ),
   },

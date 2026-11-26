@@ -18,6 +18,7 @@ export default defineConfig({
       '/budgets': API,
       '/dashboard': API,
       '/cards': API,
+      '/goals': API,
       '/open-finance': API,
     },
   },

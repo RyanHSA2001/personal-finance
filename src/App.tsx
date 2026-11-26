@@ -11,6 +11,7 @@ import {
 } from './services/authService'
 import AdminPage from './pages/AdminPage'
 import CardsPage from './pages/CardsPage'
+import GoalsPage from './pages/GoalsPage'
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import OpenFinancePage from './pages/OpenFinancePage'
@@ -98,6 +99,7 @@ function App() {
     <AppShell view={view} isAdmin={isAdmin} onNavigate={setView} onLogout={handleLogout}>
       {view === 'home' && <HomePage onNavigate={setView} />}
       {view === 'transactions' && <TransactionsPage />}
+      {view === 'goals' && <GoalsPage />}
       {view === 'cards' && <CardsPage onNavigate={setView} />}
       {view === 'open-finance' && <OpenFinancePage onNavigate={setView} />}
       {view === 'registry' && <RegistryPage />}
