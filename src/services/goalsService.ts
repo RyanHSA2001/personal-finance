@@ -48,6 +48,8 @@ export type GoalsOverview = {
   month: string
   today: string
   monthIncomeCents: number
+  monthAccountExpenseCents: number
+  monthCardInvoicesCents: number
   monthExpenseCents: number
   monthNetCents: number
   goals: GoalDto[]

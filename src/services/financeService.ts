@@ -80,6 +80,7 @@ export type Dashboard = {
   totalBalanceCents: number
   projectedBalanceCents: number
   monthIncomeCents: number
+  monthAccountExpenseCents: number
   monthExpenseCents: number
   monthNetCents: number
   monthCardInvoicesCents: number

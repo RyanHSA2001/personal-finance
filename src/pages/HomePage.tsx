@@ -79,12 +79,21 @@ function HomePage({ onNavigate }: HomePageProps) {
           }
         />
         <Kpi label="Receitas no mês" cents={data.monthIncomeCents} tone="positive" />
-        <Kpi label="Despesas no mês" cents={data.monthExpenseCents} tone="negative" />
+        <Kpi
+          label="Despesas no mês"
+          cents={data.monthExpenseCents}
+          tone="negative"
+          hint={
+            data.monthCardInvoicesCents > 0
+              ? `Conta ${formatMoney(data.monthAccountExpenseCents)} + Fatura ${formatMoney(data.monthCardInvoicesCents)}`
+              : 'Somente em conta'
+          }
+        />
         <Kpi
           label="Resultado do mês"
           cents={data.monthNetCents}
           tone={netTone}
-          hint={data.monthNetCents >= 0 ? 'Sobrou dinheiro' : 'Gastou mais do que recebeu'}
+          hint={`${formatMoney(data.monthIncomeCents)} − ${formatMoney(data.monthExpenseCents)} · ${data.monthNetCents >= 0 ? 'Sobrou dinheiro' : 'Acima das receitas'}`}
         />
         <Kpi
           label={month === currentMonth() ? 'Fatura atual' : 'Faturas no mês'}

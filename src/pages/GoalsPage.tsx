@@ -320,7 +320,32 @@ function GoalsListPanel({ overview, onChanged }: { overview: GoalsOverview; onCh
       <div className="card-head">
         <h2 className="card-title">Metas de economia</h2>
         <span className={`chip ${overview.monthNetCents >= 0 ? 'tone-positive' : 'tone-negative'}`}>
-          Saldo do mês: {formatMoney(overview.monthNetCents)}
+          Resultado do mês: {formatMoney(overview.monthNetCents)}
+        </span>
+      </div>
+
+      <div className="goals-month-breakdown" aria-label="Cálculo do resultado do mês">
+        <span>
+          Receitas <strong className="tone-positive">{formatMoney(overview.monthIncomeCents)}</strong>
+        </span>
+        <span className="goals-op" aria-hidden="true">−</span>
+        <span>
+          Conta <strong className="tone-negative">{formatMoney(overview.monthAccountExpenseCents)}</strong>
+        </span>
+        {overview.monthCardInvoicesCents > 0 && (
+          <>
+            <span className="goals-op" aria-hidden="true">−</span>
+            <span>
+              Fatura <strong className="tone-negative">{formatMoney(overview.monthCardInvoicesCents)}</strong>
+            </span>
+          </>
+        )}
+        <span className="goals-op" aria-hidden="true">=</span>
+        <span>
+          Resultado{' '}
+          <strong className={overview.monthNetCents >= 0 ? 'tone-positive' : 'tone-negative'}>
+            {formatMoney(overview.monthNetCents)}
+          </strong>
         </span>
       </div>
 
