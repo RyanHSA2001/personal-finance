@@ -3,7 +3,7 @@ import { useCardLight } from '../../hooks/useCardLight'
 import '../../styles/app.css'
 import AppBackground from './AppBackground'
 
-export type AppView = 'home' | 'transactions' | 'cards' | 'open-finance' | 'registry'
+export type AppView = 'home' | 'transactions' | 'cards' | 'open-finance' | 'registry' | 'admin'
 
 type NavItem = {
   view: AppView
@@ -79,13 +79,14 @@ const NAV_ITEMS: NavItem[] = [
 
 type AppShellProps = {
   view: AppView
+  isAdmin: boolean
   onNavigate: (view: AppView) => void
   onLogout: () => void
   children: ReactNode
 }
 
 // Moldura do aplicativo logado: fundo animado, cabeçalho desktop, barra inferior no mobile e área de conteúdo.
-function AppShell({ view, onNavigate, onLogout, children }: AppShellProps) {
+function AppShell({ view, isAdmin, onNavigate, onLogout, children }: AppShellProps) {
   const rootRef = useRef<HTMLDivElement>(null)
   useCardLight(rootRef)
 
@@ -124,9 +125,25 @@ function AppShell({ view, onNavigate, onLogout, children }: AppShellProps) {
           ))}
         </nav>
 
-        <button type="button" className="btn btn-ghost app-logout-btn" onClick={onLogout}>
-          Sair
-        </button>
+        <div className="app-header-actions">
+          {isAdmin && (
+            <button
+              type="button"
+              className={`btn btn-ghost app-admin-btn${view === 'admin' ? ' is-active' : ''}`}
+              aria-current={view === 'admin' ? 'page' : undefined}
+              onClick={() => handleSelect('admin')}
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 3 5 6v6c0 4.5 3 7.8 7 9 4-1.2 7-4.5 7-9V6l-7-3Z" />
+                <path d="m9.5 12 1.8 1.8 3.5-3.6" />
+              </svg>
+              <span>Admin</span>
+            </button>
+          )}
+          <button type="button" className="btn btn-ghost app-logout-btn" onClick={onLogout}>
+            Sair
+          </button>
+        </div>
       </header>
 
       <main className="app-main">{children}</main>

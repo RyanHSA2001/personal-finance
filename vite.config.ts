@@ -11,6 +11,7 @@ export default defineConfig({
     // Assim o navegador não precisa de CORS.
     proxy: {
       '/auth': API,
+      '/admin': API,
       '/accounts': API,
       '/categories': API,
       '/transactions': API,

@@ -4,10 +4,12 @@ import AppShell, { type AppView } from './components/app/AppShell'
 import { AUTH_EXPIRED_EVENT } from './services/apiClient'
 import {
   clearAccessToken,
+  getIsAdmin,
   logout,
   refreshSession,
   subscribeAuthBroadcast,
 } from './services/authService'
+import AdminPage from './pages/AdminPage'
 import CardsPage from './pages/CardsPage'
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
@@ -20,15 +22,20 @@ type AuthState = 'checking' | 'authenticated' | 'unauthenticated'
 // Sem roteador: a tela atual fica no estado. Na abertura, tenta restaurar a sessão pelo cookie HttpOnly.
 function App() {
   const [authState, setAuthState] = useState<AuthState>('checking')
+  const [isAdmin, setIsAdmin] = useState(false)
   const [view, setView] = useState<AppView>('home')
 
-  const handleAuthenticated = useCallback(() => setAuthState('authenticated'), [])
+  const handleAuthenticated = useCallback(() => {
+    setIsAdmin(getIsAdmin())
+    setAuthState('authenticated')
+  }, [])
 
   useEffect(() => {
     let active = true
 
     refreshSession().then((session) => {
       if (!active) return
+      setIsAdmin(Boolean(session?.isAdmin))
       setAuthState(session ? 'authenticated' : 'unauthenticated')
     })
 
@@ -40,6 +47,7 @@ function App() {
   useEffect(() => {
     const handleExpired = () => {
       clearAccessToken()
+      setIsAdmin(false)
       setView('home')
       setAuthState('unauthenticated')
     }
@@ -50,7 +58,10 @@ function App() {
         handleExpired()
       } else if (type === 'login') {
         refreshSession().then((session) => {
-          if (session) setAuthState('authenticated')
+          if (session) {
+            setIsAdmin(Boolean(session.isAdmin))
+            setAuthState('authenticated')
+          }
         })
       }
     })
@@ -78,17 +89,19 @@ function App() {
 
   async function handleLogout() {
     await logout()
+    setIsAdmin(false)
     setView('home')
     setAuthState('unauthenticated')
   }
 
   return (
-    <AppShell view={view} onNavigate={setView} onLogout={handleLogout}>
+    <AppShell view={view} isAdmin={isAdmin} onNavigate={setView} onLogout={handleLogout}>
       {view === 'home' && <HomePage onNavigate={setView} />}
       {view === 'transactions' && <TransactionsPage />}
       {view === 'cards' && <CardsPage onNavigate={setView} />}
       {view === 'open-finance' && <OpenFinancePage onNavigate={setView} />}
       {view === 'registry' && <RegistryPage />}
+      {view === 'admin' && isAdmin && <AdminPage />}
     </AppShell>
   )
 }

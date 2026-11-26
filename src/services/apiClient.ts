@@ -82,6 +82,37 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   return data as T
 }
 
+export type AllowedEmailEntry = {
+  id: string
+  email: string
+  note: string
+  createdAtUtc: string
+  isRegistered: boolean
+}
+
+export type AdminUserSummary = {
+  id: string
+  name: string
+  email: string
+  isAdmin: boolean
+  createdAtUtc: string
+}
+
+export const adminApi = {
+  allowedEmails: {
+    list: (signal?: AbortSignal) => apiRequest<AllowedEmailEntry[]>('/admin/allowed-emails', { signal }),
+    add: (email: string, note: string) =>
+      apiRequest<AllowedEmailEntry>('/admin/allowed-emails', {
+        method: 'POST',
+        body: { email, note },
+      }),
+    remove: (id: string) => apiRequest<void>(`/admin/allowed-emails/${id}`, { method: 'DELETE' }),
+  },
+  users: {
+    list: (signal?: AbortSignal) => apiRequest<AdminUserSummary[]>('/admin/users', { signal }),
+  },
+}
+
 export const sessionApi = {
   list: (signal?: AbortSignal) => apiRequest<ActiveSession[]>('/auth/sessions', { signal }),
   revoke: (id: string) => apiRequest<void>(`/auth/sessions/${id}`, { method: 'DELETE' }),

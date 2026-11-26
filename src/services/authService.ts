@@ -17,6 +17,7 @@ export type AuthSession = {
   accessToken: string
   expiresAtUtc: string
   sessionId: string
+  isAdmin?: boolean
 }
 
 export type ActiveSession = {
@@ -43,6 +44,7 @@ const AUTH_CHANNEL_NAME = 'personalcontrol-auth'
 const TAB_ID = Math.random().toString(36).slice(2)
 
 let accessToken: string | null = null
+let currentIsAdmin = false
 let refreshInFlight: Promise<AuthSession | null> | null = null
 
 function clearLegacyStorage(): void {
@@ -59,12 +61,18 @@ export function getAccessToken(): string | null {
   return accessToken
 }
 
-export function setAccessToken(token: string | null): void {
+export function getIsAdmin(): boolean {
+  return currentIsAdmin
+}
+
+export function setAccessToken(token: string | null, isAdmin?: boolean): void {
   accessToken = token
+  if (typeof isAdmin === 'boolean') currentIsAdmin = isAdmin
 }
 
 export function clearAccessToken(): void {
   accessToken = null
+  currentIsAdmin = false
   clearLegacyStorage()
 }
 
@@ -121,7 +129,7 @@ export function refreshSession(): Promise<AuthSession | null> {
       }
 
       const session = (await response.json()) as AuthSession
-      setAccessToken(session.accessToken)
+      setAccessToken(session.accessToken, Boolean(session.isAdmin))
       return session
     } catch {
       return null
@@ -170,7 +178,7 @@ async function postAuth(path: string, body: unknown, signal?: AbortSignal): Prom
 
     if (response.ok) {
       const session = (await response.json()) as AuthSession
-      setAccessToken(session.accessToken)
+      setAccessToken(session.accessToken, Boolean(session.isAdmin))
       notifyAuthBroadcast('login')
       return { ok: true, session }
     }
