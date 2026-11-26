@@ -40,6 +40,7 @@ export type AuthResult =
 
 const LEGACY_TOKEN_KEY = 'personalcontrol.token'
 const AUTH_CHANNEL_NAME = 'personalcontrol-auth'
+const TAB_ID = Math.random().toString(36).slice(2)
 
 let accessToken: string | null = null
 let refreshInFlight: Promise<AuthSession | null> | null = null
@@ -71,7 +72,7 @@ export function notifyAuthBroadcast(type: 'logout' | 'login'): void {
   if (typeof BroadcastChannel === 'undefined') return
   try {
     const channel = new BroadcastChannel(AUTH_CHANNEL_NAME)
-    channel.postMessage({ type })
+    channel.postMessage({ type, sender: TAB_ID })
     channel.close()
   } catch {
     // Ignora se BroadcastChannel não estiver disponível.
@@ -82,7 +83,8 @@ export function subscribeAuthBroadcast(onMessage: (type: 'logout' | 'login') => 
   if (typeof BroadcastChannel === 'undefined') return () => {}
   try {
     const channel = new BroadcastChannel(AUTH_CHANNEL_NAME)
-    channel.onmessage = (event: MessageEvent<{ type?: 'logout' | 'login' }>) => {
+    channel.onmessage = (event: MessageEvent<{ type?: 'logout' | 'login'; sender?: string }>) => {
+      if (event.data?.sender === TAB_ID) return
       if (event.data?.type === 'logout' || event.data?.type === 'login') {
         onMessage(event.data.type)
       }

@@ -6,7 +6,9 @@ export function useCapsLock(): boolean {
 
   useEffect(() => {
     function handleKey(event: KeyboardEvent) {
-      setActive(event.getModifierState('CapsLock'))
+      if (typeof event.getModifierState === 'function') {
+        setActive(event.getModifierState('CapsLock'))
+      }
     }
 
     window.addEventListener('keydown', handleKey)
