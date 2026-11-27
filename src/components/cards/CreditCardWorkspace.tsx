@@ -210,6 +210,7 @@ function CreditCardWorkspace({
             <p className="page-subtitle" style={{ marginTop: 4 }}>
               {card.issuer ? `${card.issuer} · ` : ''}
               {CARD_BRAND_LABELS[card.brand]} · Fecha dia {card.closingDay} · Vence dia {card.dueDay}
+              {card.defaultPaymentAccountName ? ` · Conta ${card.defaultPaymentAccountName}` : ''}
             </p>
           </div>
 

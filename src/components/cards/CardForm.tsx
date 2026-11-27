@@ -253,7 +253,7 @@ function CardForm({ accounts, editingCard, onSaved, onCancel }: CardFormProps) {
           </label>
 
           <Select
-            label="Conta padrão p/ pagamento"
+            label="Conta vinculada (pagamento)"
             value={defaultPaymentAccountId}
             options={paymentAccountOptions}
             onChange={setDefaultPaymentAccountId}
