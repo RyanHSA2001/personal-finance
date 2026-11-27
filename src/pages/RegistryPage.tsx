@@ -33,6 +33,24 @@ function RegistryPage({ onNavigate }: { onNavigate: (view: AppView) => void }) {
 
       <BudgetsPanel categoriesVersion={categoriesVersion} />
 
+      <Panel title="Aplicativo Android (APK)">
+        <p className="page-subtitle">
+          Instale o app nativo do PersonalControl no seu celular Android com widgets de Streak Diário e Resumo do Mês,
+          lançamento rápido e desbloqueio por biometria. Ao abrir o arquivo baixado, permita a instalação de apps
+          desconhecidos para o navegador.
+        </p>
+        <div className="form-actions" style={{ marginTop: 16 }}>
+          <a
+            className="btn btn-primary"
+            href="/downloads/PersonalControl.apk"
+            download="PersonalControl.apk"
+            style={{ textDecoration: 'none' }}
+          >
+            Baixar PersonalControl.apk
+          </a>
+        </div>
+      </Panel>
+
       <Panel title="Integração Open Finance (opcional)">
         <p className="page-subtitle">
           Prefere controle 100% gratuito? Use o botão <strong>+ Lançar</strong>, contas fixas e importação de extratos
